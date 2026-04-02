@@ -790,6 +790,19 @@
         </div>
       </section>
 
+      <section class="section" id="section-checklist" data-tone="checklist">
+        <div class="section-header">
+          <div class="left">
+            <div class="icon">✅</div>
+            <div class="title">Project Checklist</div>
+          </div>
+          <div class="meta"><span class="reading" id="reading-checklist">—</span></div>
+        </div>
+        <div class="section-body">
+          <div class="markdown-body" id="content-checklist">Loading...</div>
+        </div>
+      </section>
+
       <section class="section" id="section-phase1" data-tone="phase">
         <div class="section-header">
           <div class="left">
@@ -800,6 +813,45 @@
         </div>
         <div class="section-body">
           <div class="markdown-body" id="content-phase1">Loading...</div>
+        </div>
+      </section>
+
+      <section class="section" id="section-phase2" data-tone="phase">
+        <div class="section-header">
+          <div class="left">
+            <div class="icon">💰</div>
+            <div class="title">Phase 2 Implementation</div>
+          </div>
+          <div class="meta"><span class="reading" id="reading-phase2">—</span></div>
+        </div>
+        <div class="section-body">
+          <div class="markdown-body" id="content-phase2">Loading...</div>
+        </div>
+      </section>
+
+      <section class="section" id="section-phase3" data-tone="phase">
+        <div class="section-header">
+          <div class="left">
+            <div class="icon">📱</div>
+            <div class="title">Phase 3 Implementation</div>
+          </div>
+          <div class="meta"><span class="reading" id="reading-phase3">—</span></div>
+        </div>
+        <div class="section-body">
+          <div class="markdown-body" id="content-phase3">Loading...</div>
+        </div>
+      </section>
+
+      <section class="section" id="section-phase4" data-tone="phase">
+        <div class="section-header">
+          <div class="left">
+            <div class="icon">🤖</div>
+            <div class="title">Phase 4 Implementation</div>
+          </div>
+          <div class="meta"><span class="reading" id="reading-phase4">—</span></div>
+        </div>
+        <div class="section-body">
+          <div class="markdown-body" id="content-phase4">Loading...</div>
         </div>
       </section>
     </main>
@@ -1248,9 +1300,13 @@
       const files = [
         { filename: "README.md", tone: "overview", containerId: "content-overview", readingId: "reading-overview", entryTitle: "Overview", icon: "📘" },
         { filename: "IMPLEMENTATION_PLAN.md", tone: "plan", containerId: "content-plan", readingId: "reading-plan", entryTitle: "Implementation Plan", icon: "🗺️" },
+        { filename: "PROJECT_CHECKLIST.md", tone: "checklist", containerId: "content-checklist", readingId: "reading-checklist", entryTitle: "Project Checklist", icon: "✅" },
         { filename: "SECURITY_GUIDE.md", tone: "security", containerId: "content-security", readingId: "reading-security", entryTitle: "Security Guide", icon: "⚠️" },
         { filename: "FRONTEND_UX_GUIDE.md", tone: "ux", containerId: "content-frontend", readingId: "reading-frontend", entryTitle: "Frontend & UX Guide", icon: "🎨" },
-        { filename: "PHASE_1_IMPLEMENTATION.md", tone: "phase", containerId: "content-phase1", readingId: "reading-phase1", entryTitle: "Phase 1 Implementation", icon: "🚀" }
+        { filename: "PHASE_1_IMPLEMENTATION.md", tone: "phase", containerId: "content-phase1", readingId: "reading-phase1", entryTitle: "Phase 1 Implementation", icon: "🚀" },
+        { filename: "PHASE_2_IMPLEMENTATION.md", tone: "phase", containerId: "content-phase2", readingId: "reading-phase2", entryTitle: "Phase 2 Implementation", icon: "💰" },
+        { filename: "PHASE_3_IMPLEMENTATION.md", tone: "phase", containerId: "content-phase3", readingId: "reading-phase3", entryTitle: "Phase 3 Implementation", icon: "📱" },
+        { filename: "PHASE_4_IMPLEMENTATION.md", tone: "phase", containerId: "content-phase4", readingId: "reading-phase4", entryTitle: "Phase 4 Implementation", icon: "🤖" }
       ];
 
       // Load markdown
@@ -1326,9 +1382,13 @@
       const entries = [
         { filename: "README.md", title: "Overview", icon: "📘", defaultOpen: true, container: document.getElementById("content-overview") },
         { filename: "IMPLEMENTATION_PLAN.md", title: "Implementation Plan", icon: "🗺️", defaultOpen: true, container: document.getElementById("content-plan") },
+        { filename: "PROJECT_CHECKLIST.md", title: "Project Checklist", icon: "✅", defaultOpen: false, container: document.getElementById("content-checklist") },
         { filename: "SECURITY_GUIDE.md", title: "Security Guide", icon: "⚠️", defaultOpen: false, container: document.getElementById("content-security") },
         { filename: "FRONTEND_UX_GUIDE.md", title: "Frontend & UX", icon: "🎨", defaultOpen: false, container: document.getElementById("content-frontend") },
-        { filename: "PHASE_1_IMPLEMENTATION.md", title: "Phase 1", icon: "🚀", defaultOpen: false, container: document.getElementById("content-phase1") }
+        { filename: "PHASE_1_IMPLEMENTATION.md", title: "Phase 1", icon: "🚀", defaultOpen: false, container: document.getElementById("content-phase1") },
+        { filename: "PHASE_2_IMPLEMENTATION.md", title: "Phase 2", icon: "💰", defaultOpen: false, container: document.getElementById("content-phase2") },
+        { filename: "PHASE_3_IMPLEMENTATION.md", title: "Phase 3", icon: "📱", defaultOpen: false, container: document.getElementById("content-phase3") },
+        { filename: "PHASE_4_IMPLEMENTATION.md", title: "Phase 4", icon: "🤖", defaultOpen: false, container: document.getElementById("content-phase4") }
       ];
 
       entries.forEach((e) => {
@@ -1359,7 +1419,7 @@
 
       // Export as Markdown
       document.getElementById("btn-export-markdown").addEventListener("click", () => {
-        const order = ["README.md", "IMPLEMENTATION_PLAN.md", "SECURITY_GUIDE.md", "FRONTEND_UX_GUIDE.md", "PHASE_1_IMPLEMENTATION.md"];
+        const order = ["README.md", "IMPLEMENTATION_PLAN.md", "PROJECT_CHECKLIST.md", "SECURITY_GUIDE.md", "FRONTEND_UX_GUIDE.md", "PHASE_1_IMPLEMENTATION.md", "PHASE_2_IMPLEMENTATION.md", "PHASE_3_IMPLEMENTATION.md", "PHASE_4_IMPLEMENTATION.md"];
         const combined = order.map(name => {
           return `# ${name}\\n\\n${mdTexts[name] || ""}\\n`;
         }).join("\\n---\\n\\n");
