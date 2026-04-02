@@ -26,10 +26,10 @@
 - [x] Install Git (Git 2.50.1 installed)
 - [x] Install IntelliJ IDEA / VS Code (VS Code 1.109.5 installed)
 - [x] Clone repository
-- [ ] Set up IDE with Kotlin plugin
+- [x] Set up IDE with Kotlin plugin
 
 ### Project Initialization
-- [ ] Create Spring Boot + Kotlin backend project
+- [x] Create Spring Boot + Kotlin backend project
 - [ ] Create React + Vite frontend project
 - [ ] Set up Gradle build configuration
 - [ ] Set up package.json dependencies
