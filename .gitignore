@@ -33,3 +33,6 @@ backend/*.jar
 *.class
 *.war
 *.ear
+
+#Claude Code
+.claude/
