@@ -132,7 +132,7 @@ Expense Tracker/
 ## ✨ Features
 
 ### Phase 1-2 (MVP) - Weeks 1-10
-- 📅 User authentication with JWT
+-  User authentication with JWT
 - 📅 Multiple account management
 - 📅 Income/expense tracking
 - 📅 Category system
