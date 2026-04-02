@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personal Finance Tracker - Complete Implementation Guide</title>
+  <meta name="description" content="Personal Finance Tracker - complete implementation guide with interactive navigation, syntax highlighting, and print-friendly layout." />
+  <meta property="og:title" content="Personal Finance Tracker - Complete Implementation Guide" />
+  <meta property="og:description" content="Interactive combined documentation: roadmap, security, frontend/UX, and Phase 1 step-by-step." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' font-size='44'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E" />
+
+  <!-- Libraries -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-kotlin.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-yaml.min.js"></script>
+
+  <style>
+    :root{
+      --primary:#2563eb;
+      --success:#10b981;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --bg:#ffffff;
+      --text:#1f2937;
+      --sidebar:#f9fafb;
+      --muted:#6b7280;
+      --card:#ffffff;
+      --border:rgba(17,24,39,0.12);
+      --shadow: 0 10px 35px rgba(0,0,0,0.08);
+      --chip: rgba(37,99,235,0.10);
+      --code-bg: #0f172a;
+      --code-text:#e5e7eb;
+      --focus: rgba(37,99,235,0.35);
+      --tone-overview: var(--primary);
+      --tone-phase: var(--success);
+      --tone-security: var(--warning);
+      --tone-ux: #7c3aed;
+      --tone-plan: #0ea5e9;
+    }
+
+    body.dark{
+      --primary:#3b82f6;
+      --bg:#111827;
+      --text:#f9fafb;
+      --sidebar:#1f2937;
+      --card:#0b1220;
+      --border:rgba(249,250,251,0.12);
+      --muted:#9ca3af;
+      --shadow: 0 14px 42px rgba(0,0,0,0.35);
+      --chip: rgba(59,130,246,0.15);
+      --code-bg:#0b1220;
+      --code-text:#e5e7eb;
+      --tone-overview: var(--primary);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+      line-height:1.5;
+    }
+
+    /* Header */
+    .topbar{
+      position: sticky;
+      top:0;
+      z-index:50;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    body.dark .topbar{
+      background: rgba(17,24,39,0.75);
+    }
+    .topbar-inner{
+      max-width: 1320px;
+      margin:0 auto;
+      padding: 14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 220px;
+    }
+    .brand h1{
+      font-size: 16px;
+      margin:0;
+      font-weight:800;
+      letter-spacing:0.2px;
+      white-space:nowrap;
+    }
+    .brand .subtitle{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top:2px;
+    }
+    .brand-text{
+      display:flex;
+      flex-direction:column;
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .btn{
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      font-weight: 650;
+      font-size: 13px;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(37,99,235,0.35); }
+    .btn:focus{ outline: 2px solid var(--focus); outline-offset: 2px; }
+    .btn.primary{ background: linear-gradient(135deg, rgba(37,99,235,0.18), rgba(37,99,235,0.08)); border-color: rgba(37,99,235,0.25); }
+    .btn.icon{ padding: 8px 10px; }
+
+    /* Layout */
+    .layout{
+      max-width: 1320px;
+      margin:0 auto;
+      padding: 16px;
+      display:grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; }
+      .sidebar{ position: relative; top:auto; }
+    }
+
+    /* Sidebar */
+    .sidebar{
+      position: sticky;
+      top: 72px;
+      height: calc(100vh - 88px);
+      overflow:auto;
+      border-radius: 18px;
+      background: var(--sidebar);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+    .sidebar h2{
+      margin: 10px 6px 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing:0.3px;
+      text-transform: uppercase;
+    }
+    .nav-search{
+      width:100%;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline:none;
+    }
+    .nav-search:focus{ outline: 2px solid var(--focus); }
+
+    .nav-groups{
+      margin-top: 10px;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+    .nav-group details{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--card);
+      overflow:hidden;
+    }
+    .nav-group summary{
+      cursor:pointer;
+      padding: 10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-weight: 750;
+      user-select:none;
+    }
+    .nav-group summary .group-title{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .nav-group summary .badge{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .nav-list{
+      list-style:none;
+      padding: 6px 0 10px;
+      margin:0;
+      max-height: 330px;
+      overflow:auto;
+    }
+    .nav-item a{
+      display:block;
+      padding: 8px 12px;
+      text-decoration:none;
+      color: var(--text);
+      font-size: 13px;
+      border-left: 3px solid transparent;
+      margin: 2px 0;
+      transition: background 0.12s ease, border-color 0.12s ease;
+    }
+    .nav-item a:hover{
+      background: rgba(37,99,235,0.10);
+      border-left-color: rgba(37,99,235,0.55);
+    }
+    .nav-item a.active{
+      background: rgba(37,99,235,0.14);
+      border-left-color: var(--primary);
+      font-weight: 800;
+    }
+    .nav-item a.sub{
+      padding-left: 22px;
+      color: var(--muted);
+      border-left-color: rgba(124,58,237,0.0);
+    }
+    .nav-item a.sub.active{ color: var(--text); }
+
+    /* Main content */
+    main{
+      min-width:0;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      overflow:hidden;
+    }
+    .hero{
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(900px 120px at 0% 0%, rgba(37,99,235,0.14), transparent 55%),
+        radial-gradient(900px 120px at 100% 0%, rgba(16,185,129,0.13), transparent 55%),
+        var(--card);
+    }
+
+    .hero-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap:wrap;
+    }
+    .hero h2{ margin:0; font-size: 16px; }
+    .hero p{ margin: 6px 0 0; color: var(--muted); font-size: 13px; max-width: 760px;}
+
+    /* Progress / Timeline */
+    .progress-row{
+      display:grid;
+      grid-template-columns: 1fr 280px;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 980px){
+      .progress-row{ grid-template-columns: 1fr; }
+    }
+    .progress-card{
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(37,99,235,0.06);
+    }
+    body.dark .progress-card{ background: rgba(59,130,246,0.10); }
+    .progress-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-weight:850;
+      margin-bottom: 10px;
+    }
+    .progress-title span{
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 750;
+    }
+    .bar{
+      width:100%;
+      height: 12px;
+      background: rgba(0,0,0,0.06);
+      border-radius: 999px;
+      overflow:hidden;
+      border: 1px solid var(--border);
+    }
+    body.dark .bar{ background: rgba(255,255,255,0.06); }
+    .bar > i{
+      display:block;
+      height:100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(37,99,235,0.95), rgba(16,185,129,0.95));
+      border-radius: 999px;
+      transition: width 0.45s ease;
+    }
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .stat{
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(255,255,255,0.35);
+    }
+    body.dark .stat{ background: rgba(0,0,0,0.15); }
+    .stat .label{ font-size: 12px; color: var(--muted); font-weight: 800; letter-spacing:0.2px; }
+    .stat .value{ margin-top: 6px; font-size: 16px; font-weight: 900; }
+
+    .timeline-card{
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(16,185,129,0.05);
+    }
+    body.dark .timeline-card{ background: rgba(16,185,129,0.10); }
+    .timeline-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      font-weight:900;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    .timeline{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .timeline-step{
+      display:grid;
+      grid-template-columns: 32px 1fr;
+      gap: 10px;
+      align-items:flex-start;
+    }
+    .dot{
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .timeline-step.completed .dot{ background: rgba(16,185,129,0.18); color: var(--success); border-color: rgba(16,185,129,0.35); }
+    .timeline-step.planned .dot{ background: rgba(245,158,11,0.16); color: var(--warning); border-color: rgba(245,158,11,0.35); }
+    .timeline-step.future .dot{ background: rgba(59,130,246,0.14); color: var(--primary); border-color: rgba(59,130,246,0.35); }
+    .timeline-step .step-title{ font-weight: 900; font-size: 13px; }
+    .timeline-step .step-sub{ color: var(--muted); font-size: 12px; margin-top: 3px;}
+
+    /* Content sections */
+    .section{
+      margin-top: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow:hidden;
+      background: var(--card);
+    }
+    .section-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-header .left{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .section-header .icon{
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 16px;
+      background: rgba(37,99,235,0.10);
+      border: 1px solid rgba(37,99,235,0.18);
+      flex: 0 0 auto;
+    }
+    .section-header .title{
+      font-weight: 950;
+      font-size: 14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .section-header .meta{
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space:nowrap;
+    }
+
+    .section[data-tone="overview"] .section-header .icon{ background: rgba(37,99,235,0.12); border-color: rgba(37,99,235,0.25); }
+    .section[data-tone="phase"] .section-header .icon{ background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.25); }
+    .section[data-tone="security"] .section-header .icon{ background: rgba(245,158,11,0.14); border-color: rgba(245,158,11,0.25); }
+    .section[data-tone="ux"] .section-header .icon{ background: rgba(124,58,237,0.12); border-color: rgba(124,58,237,0.22); }
+    .section[data-tone="plan"] .section-header .icon{ background: rgba(14,165,233,0.12); border-color: rgba(14,165,233,0.22); }
+
+    .section-body{
+      padding: 12px 14px 14px;
+    }
+    .markdown-body h1{
+      font-size: 18px;
+      margin: 10px 0 14px;
+    }
+    .markdown-body h2{
+      margin: 18px 0 8px;
+      font-size: 15px;
+      letter-spacing:0.1px;
+      position: relative;
+    }
+    .markdown-body h3{
+      margin: 14px 0 6px;
+      font-size: 14px;
+      color: var(--text);
+      position: relative;
+    }
+    .anchor-link{
+      position:absolute;
+      right: -6px;
+      top: 0;
+      opacity: 0;
+      transform: translateY(1px);
+      text-decoration:none;
+      color: rgba(37,99,235,0.9);
+      font-weight:900;
+      font-size: 12px;
+      background: rgba(37,99,235,0.10);
+      border: 1px solid rgba(37,99,235,0.22);
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition: opacity .12s ease, transform .12s ease;
+    }
+    .markdown-body h2:hover .anchor-link,
+    .markdown-body h3:hover .anchor-link{
+      opacity: 1;
+      transform: translateY(0px);
+    }
+
+    details.collapsible{
+      margin: 10px 0;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(37,99,235,0.04);
+      overflow:hidden;
+    }
+    body.dark details.collapsible{ background: rgba(59,130,246,0.07); }
+    details.collapsible > summary{
+      cursor:pointer;
+      padding: 12px 12px;
+      font-weight: 900;
+      list-style:none;
+    }
+    details.collapsible > summary::-webkit-details-marker{ display:none; }
+    details.collapsible > summary .summary-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    details.collapsible > summary .chev{
+      color: var(--muted);
+      font-weight: 900;
+    }
+    details.collapsible[open] > summary .chev{ transform: rotate(90deg); }
+    details.collapsible .detail-content{
+      padding: 0 12px 12px;
+    }
+
+    /* Typography */
+    .markdown-body p{ color: var(--text); }
+    .markdown-body ul{ margin: 6px 0 10px 20px; }
+    .markdown-body li{ margin: 4px 0; }
+    .markdown-body code.inline{
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--chip);
+      font-size: 12px;
+    }
+
+    /* Tables */
+    .table-container{
+      width:100%;
+      overflow:auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin: 10px 0;
+      background: rgba(0,0,0,0.02);
+    }
+    body.dark .table-container{ background: rgba(255,255,255,0.04); }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 520px;
+    }
+    th, td{
+      padding: 10px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align:left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+    th{
+      background: rgba(37,99,235,0.10);
+      font-weight: 900;
+      position: sticky;
+      top:0;
+      cursor:pointer;
+      user-select:none;
+    }
+    tbody tr:nth-child(odd){ background: rgba(0,0,0,0.02); }
+    body.dark tbody tr:nth-child(odd){ background: rgba(255,255,255,0.03); }
+    tbody tr:hover{ background: rgba(37,99,235,0.08); }
+
+    /* Code blocks */
+    pre{
+      background: var(--code-bg) !important;
+      color: var(--code-text) !important;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 14px 12px;
+      overflow:auto;
+      position: relative;
+      margin: 10px 0;
+    }
+    pre code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+    .copy-code{
+      position:absolute;
+      top: 10px;
+      right: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.92);
+      cursor:pointer;
+      padding: 7px 10px;
+      font-weight: 900;
+      font-size: 12px;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .copy-code:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.14); }
+    body.dark .copy-code{
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    /* Back to top */
+    #back-to-top{
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      cursor:pointer;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      font-weight: 1000;
+      z-index: 60;
+    }
+
+    /* Scroll spy highlight helper */
+    .scroll-target{
+      scroll-margin-top: 100px;
+    }
+
+    /* Print-friendly */
+    @media print{
+      #back-to-top, .sidebar, .topbar, .no-print{ display:none !important; }
+      .layout{ grid-template-columns: 1fr; padding: 0; }
+      main{ border: none; box-shadow:none; }
+      html{ scroll-behavior:auto; }
+      body{ background: #fff !important; color:#000 !important; }
+      pre{ break-inside: avoid; }
+      details.collapsible{ border: 1px solid #ddd !important; }
+      details.collapsible > summary{ display:none; }
+      details.collapsible > .detail-content{ padding-top: 0; }
+    }
+  </style>
+</head>
+<body class="light">
+  <div class="topbar no-print">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-text">
+          <h1>💰 Personal Finance Tracker</h1>
+          <div class="subtitle">Complete Implementation Guide</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn icon primary" id="dark-mode-toggle" aria-label="Toggle dark mode">🌙</button>
+        <button class="btn" id="btn-export-markdown" type="button">Export as Markdown</button>
+        <button class="btn" id="btn-share" type="button">Share Link</button>
+        <button class="btn primary" id="btn-print" type="button">Download as PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar no-print" aria-label="Document navigation">
+      <input class="nav-search" id="nav-search" type="search" placeholder="Search sections..." aria-label="Search sections" />
+      <h2>Navigation</h2>
+
+      <div class="nav-groups" id="nav-groups">
+        <!-- Populated by JS -->
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="content" aria-label="Document content">
+      <div class="hero">
+        <div class="hero-top">
+          <div>
+            <h2>Project Status Dashboard</h2>
+            <p>
+              Interactive roadmap, security guidance, frontend/UX implementation details, and Phase 1 setup instructions.
+              Use the sidebar to jump to any topic; code blocks are syntax-highlighted and copyable.
+            </p>
+          </div>
+          <div class="no-print" style="min-width:220px; text-align:right;">
+            <div style="font-size:12px; color: var(--muted); font-weight:850;">Current focus</div>
+            <div id="current-phase-indicator" style="margin-top:6px; font-size:15px; font-weight:1000;">Loading...</div>
+          </div>
+        </div>
+
+        <div class="progress-row">
+          <section class="progress-card" aria-label="Overall progress">
+            <div class="progress-title">
+              <div>Overall Progress</div>
+              <span id="progress-percentage">0%</span>
+            </div>
+            <div class="bar" aria-hidden="true">
+              <i id="progress-bar"></i>
+            </div>
+            <div class="stats" aria-label="Quick stats">
+              <div class="stat">
+                <div class="label">Completed signals</div>
+                <div class="value" id="stat-completed">—</div>
+              </div>
+              <div class="stat">
+                <div class="label">Planned / in-progress</div>
+                <div class="value" id="stat-planned">—</div>
+              </div>
+              <div class="stat">
+                <div class="label">Future signals</div>
+                <div class="value" id="stat-future">—</div>
+              </div>
+              <div class="stat">
+                <div class="label">Coverage target</div>
+                <div class="value" id="stat-coverage">—</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="timeline-card" aria-label="Timeline visualization">
+            <div class="timeline-title">
+              <div>Implementation Timeline</div>
+              <div style="font-size:12px; color: var(--muted); font-weight:800;" id="timeline-reading">—</div>
+            </div>
+            <div class="timeline" id="timeline">
+              <!-- Populated by JS -->
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Table of contents -->
+      <section class="section no-print" data-tone="overview" style="margin-top:16px;">
+        <div class="section-header">
+          <div class="left">
+            <div class="icon">📋</div>
+            <div class="title">Table of Contents</div>
+          </div>
+          <div class="meta"><span id="toc-progress">—</span></div>
+        </div>
+        <div class="section-body">
+          <div id="toc-container" class="toc-container" aria-label="Table of contents">
+            Loading...
+          </div>
+        </div>
+      </section>
+
+      <!-- Section containers -->
+      <section class="section" id="section-overview" data-tone="overview">
+        <div class="section-header">
+          <div class="left">
+            <div class="icon">📘</div>
+            <div class="title">Overview (README)</div>
+          </div>
+          <div class="meta"><span class="reading" id="reading-overview">—</span></div>
+        </div>
+        <div class="section-body">
+          <div class="markdown-body" id="content-overview">Loading...</div>
+        </div>
+      </section>
+
+      <section class="section" id="section-plan" data-tone="plan">
+        <div class="section-header">
+          <div class="left">
+            <div class="icon">🗺️</div>
+            <div class="title">Implementation Plan</div>
+          </div>
+          <div class="meta"><span class="reading" id="reading-plan">—</span></div>
+        </div>
+        <div class="section-body">
+          <div class="markdown-body" id="content-plan">Loading...</div>
+        </div>
+      </section>
+
+      <section class="section" id="section-security" data-tone="security">
+        <div class="section-header">
+          <div class="left">
+            <div class="icon">⚠️</div>
+            <div class="title">Security Guide</div>
+          </div>
+          <div class="meta"><span class="reading" id="reading-security">—</span></div>
+        </div>
+        <div class="section-body">
+          <div class="markdown-body" id="content-security">Loading...</div>
+        </div>
+      </section>
+
+      <section class="section" id="section-frontend" data-tone="ux">
+        <div class="section-header">
+          <div class="left">
+            <div class="icon">🎨</div>
+            <div class="title">Frontend & UX Guide</div>
+          </div>
+          <div class="meta"><span class="reading" id="reading-frontend">—</span></div>
+        </div>
+        <div class="section-body">
+          <div class="markdown-body" id="content-frontend">Loading...</div>
+        </div>
+      </section>
+
+      <section class="section" id="section-phase1" data-tone="phase">
+        <div class="section-header">
+          <div class="left">
+            <div class="icon">🚀</div>
+            <div class="title">Phase 1 Implementation</div>
+          </div>
+          <div class="meta"><span class="reading" id="reading-phase1">—</span></div>
+        </div>
+        <div class="section-body">
+          <div class="markdown-body" id="content-phase1">Loading...</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <button id="back-to-top" aria-label="Back to top">↑</button>
+
+  <script>
+    // ----------------------------
+    // Helpers
+    // ----------------------------
+    const slugify = (s) => {
+      return (s || "")
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/['"]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    };
+
+    const safeText = (el) => (el && el.textContent ? el.textContent : "");
+
+    const countRegex = (text, regex) => {
+      const m = text.match(regex);
+      return m ? m.length : 0;
+    };
+
+    const estimateReadingMinutes = (text) => {
+      const words = (text || "").trim().split(/\\s+/).filter(Boolean).length;
+      const minutes = Math.max(1, Math.round(words / 200));
+      return minutes;
+    };
+
+    // Basic sortable tables (string + numeric)
+    function enableSortableTables(root) {
+      const tables = root.querySelectorAll("table");
+      tables.forEach((table) => {
+        // Skip if no thead or th
+        const headerCells = table.querySelectorAll("thead th, tr th");
+        if (!headerCells || headerCells.length === 0) return;
+
+        let sortState = { index: -1, dir: 1 };
+
+        headerCells.forEach((th, i) => {
+          th.style.userSelect = "none";
+          th.addEventListener("click", () => {
+            const tbody = table.tBodies[0];
+            if (!tbody) return;
+
+            const rows = Array.from(tbody.rows);
+            const isSameCol = sortState.index === i;
+            sortState.index = i;
+            sortState.dir = isSameCol ? -sortState.dir : 1;
+
+            const getCell = (row) => row.cells[i] ? row.cells[i].textContent.trim() : "";
+
+            const parseMaybeNumber = (v) => {
+              const num = Number(v.replace(/[^0-9+\\-\\.]/g, ""));
+              return Number.isFinite(num) ? num : null;
+            };
+
+            rows.sort((a, b) => {
+              const av = getCell(a);
+              const bv = getCell(b);
+              const an = parseMaybeNumber(av);
+              const bn = parseMaybeNumber(bv);
+
+              let cmp = 0;
+              if (an !== null && bn !== null) cmp = an - bn;
+              else cmp = av.localeCompare(bv, undefined, { sensitivity: "base" });
+              return cmp * sortState.dir;
+            });
+
+            rows.forEach((r) => tbody.appendChild(r));
+          });
+        });
+      });
+    }
+
+    function addTableWrappers(root) {
+      root.querySelectorAll("table").forEach((table) => {
+        const parent = table.parentElement;
+        if (!parent || parent.classList.contains("table-container")) return;
+        const wrapper = document.createElement("div");
+        wrapper.className = "table-container";
+        parent.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      });
+    }
+
+    function addCopyButtons(root) {
+      const pres = root.querySelectorAll("pre");
+      pres.forEach((pre) => {
+        // Avoid duplicating
+        if (pre.querySelector(".copy-code")) return;
+
+        const btn = document.createElement("button");
+        btn.className = "copy-code";
+        btn.type = "button";
+        btn.textContent = "Copy";
+        btn.setAttribute("aria-label", "Copy code block");
+
+        btn.addEventListener("click", async () => {
+          const code = pre.querySelector("code");
+          const text = code ? code.textContent : pre.textContent;
+          try {
+            await navigator.clipboard.writeText(text);
+            const prev = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = prev, 1400);
+          } catch {
+            // Fallback
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            const prev = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = prev, 1400);
+          }
+        });
+
+        pre.appendChild(btn);
+      });
+    }
+
+    function addAnchorButtons(root) {
+      root.querySelectorAll("h2[id], h3[id]").forEach((h) => {
+        if (h.querySelector(".anchor-link")) return;
+        const a = document.createElement("a");
+        a.className = "anchor-link";
+        a.href = "#" + h.id;
+        a.setAttribute("aria-label", "Link to section");
+        a.textContent = "#";
+        h.appendChild(a);
+      });
+    }
+
+    function assignHeadingIdsAndNavData(container) {
+      const used = new Set();
+      const headings = Array.from(container.querySelectorAll("h2, h3"));
+      headings.forEach((h) => {
+        const text = safeText(h);
+        let base = slugify(text) || "section";
+        let id = base;
+        let i = 2;
+        while (used.has(id) || container.ownerDocument.getElementById(id)) {
+          id = `${base}-${i++}`;
+        }
+        used.add(id);
+        h.id = id;
+        h.classList.add("scroll-target");
+      });
+    }
+
+    // Wrap h2 blocks into <details> for collapsibility.
+    // Keeps the actual h2 element in the DOM so nav links work.
+    function makeH2Collapsible(container) {
+      const mdBody = container;
+      const h2s = Array.from(mdBody.querySelectorAll("h2"));
+      if (h2s.length === 0) return;
+
+      // We only wrap if not already inside details.
+      const existingDetails = new Set(Array.from(mdBody.querySelectorAll("details.collapsible")).map(d => d));
+
+      // Convert by DOM surgery: each h2 becomes the start of a collapsible details.
+      for (let idx = 0; idx < h2s.length; idx++) {
+        const h2 = h2s[idx];
+        if (h2.closest("details.collapsible")) continue;
+
+        const nextH2 = idx + 1 < h2s.length ? h2s[idx + 1] : null;
+
+        const details = document.createElement("details");
+        details.className = "collapsible";
+        details.open = idx === 0;
+
+        const summary = document.createElement("summary");
+        const summaryInner = document.createElement("div");
+        summaryInner.className = "summary-inner";
+        const left = document.createElement("div");
+        const anchor = h2.querySelector(".anchor-link");
+        // Anchor buttons add a trailing '#' character; remove it from the collapsible summary label.
+        left.textContent = anchor ? h2.textContent.replace(anchor.textContent, "").trim() : safeText(h2);
+
+        const chev = document.createElement("div");
+        chev.className = "chev";
+        chev.textContent = "›";
+
+        summaryInner.appendChild(left);
+        summaryInner.appendChild(chev);
+        summary.appendChild(summaryInner);
+        details.appendChild(summary);
+
+        // Body wrapper
+        const body = document.createElement("div");
+        body.className = "detail-content";
+        details.appendChild(body);
+
+        // Move nodes from h2 up to (but excluding) nextH2 into details body.
+        let node = h2;
+        while (node && node !== nextH2) {
+          const next = node.nextSibling;
+          body.appendChild(node);
+          node = next;
+        }
+
+        // Insert details at position where h2 was.
+        // h2 has been moved already; we need a stable reference:
+        // Insert before the next node that followed h2 originally.
+        // The next node currently is `nextH2` (or null); inserting before nextH2 works.
+        if (nextH2) mdBody.insertBefore(details, nextH2);
+        else mdBody.appendChild(details);
+      }
+    }
+
+    function buildSidebarNav(sectionMeta) {
+      const navGroups = document.getElementById("nav-groups");
+      navGroups.innerHTML = "";
+
+      sectionMeta.forEach((group) => {
+        const groupWrap = document.createElement("div");
+        groupWrap.className = "nav-group";
+
+        const details = document.createElement("details");
+        details.open = group.defaultOpen;
+
+        const summary = document.createElement("summary");
+        const left = document.createElement("div");
+        left.className = "group-title";
+        left.innerHTML = `<span>${group.icon}</span><span>${group.title}</span>`;
+
+        const badge = document.createElement("div");
+        badge.className = "badge";
+        badge.textContent = `${group.itemCount} topics`;
+
+        summary.appendChild(left);
+        summary.appendChild(badge);
+        details.appendChild(summary);
+
+        const ul = document.createElement("ul");
+        ul.className = "nav-list";
+
+        group.items.forEach((item) => {
+          const li = document.createElement("li");
+          li.className = "nav-item";
+          const a = document.createElement("a");
+          a.href = "#" + item.id;
+          a.textContent = item.label;
+          if (item.level === 3) a.classList.add("sub");
+          a.dataset.targetId = item.id;
+
+          li.appendChild(a);
+          ul.appendChild(li);
+        });
+
+        details.appendChild(ul);
+        groupWrap.appendChild(details);
+        navGroups.appendChild(groupWrap);
+      });
+
+      // Hook filter
+      const search = document.getElementById("nav-search");
+      search.addEventListener("input", () => {
+        const q = search.value.trim().toLowerCase();
+        const links = navGroups.querySelectorAll("a");
+        links.forEach((a) => {
+          const match = a.textContent.toLowerCase().includes(q);
+          a.parentElement.style.display = match ? "" : "none";
+        });
+      });
+
+      // Scroll spy
+      const allTargets = Array.from(document.querySelectorAll(".scroll-target[id]"));
+      const linkById = new Map(Array.from(navGroups.querySelectorAll("a")).map(a => [a.dataset.targetId, a]));
+
+      const io = new IntersectionObserver((entries) => {
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a,b) => (b.intersectionRatio || 0) - (a.intersectionRatio || 0))[0];
+        if (!visible) return;
+
+        const id = visible.target.id;
+        // Open relevant details in case target is inside a collapsed container
+        const details = visible.target.closest("details.collapsible");
+        if (details && !details.open) {
+          // Don't open on mere scroll-spy; only on click/hash navigation.
+          // So we skip toggling here.
+        }
+
+        allTargets.forEach((t) => {
+          const l = linkById.get(t.id);
+          if (l) l.classList.remove("active");
+        });
+        const active = linkById.get(id);
+        if (active) active.classList.add("active");
+
+        // Update TOC progress estimate
+        const doc = document.documentElement;
+        const scrollTop = doc.scrollTop || document.body.scrollTop;
+        const scrollHeight = doc.scrollHeight - doc.clientHeight;
+        const ratio = scrollHeight > 0 ? (scrollTop / scrollHeight) : 0;
+        const percent = Math.round(ratio * 100);
+        document.getElementById("toc-progress").textContent = `~${percent}% through document`;
+      }, {
+        root: null,
+        threshold: [0.1, 0.2, 0.35, 0.5]
+      });
+
+      allTargets.forEach((t) => io.observe(t));
+
+      // Smooth open on anchor click
+      navGroups.querySelectorAll("a[href^='#']").forEach((a) => {
+        a.addEventListener("click", () => {
+          const id = a.getAttribute("href").slice(1);
+          const target = document.getElementById(id);
+          if (!target) return;
+          const details = target.closest("details.collapsible");
+          if (details) details.open = true;
+        });
+      });
+
+      // If opened via hash, ensure details are opened
+      const initialHash = (window.location.hash || "").replace("#", "");
+      if (initialHash) {
+        const target = document.getElementById(initialHash);
+        if (target) {
+          const details = target.closest("details.collapsible");
+          if (details) details.open = true;
+          setTimeout(() => target.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+        }
+      }
+
+      // Back to top
+      const backBtn = document.getElementById("back-to-top");
+      window.addEventListener("scroll", () => {
+        if ((window.scrollY || 0) > 500) backBtn.style.display = "flex";
+        else backBtn.style.display = "none";
+      });
+      backBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+    }
+
+    function buildTopTOC(sectionMeta) {
+      const toc = document.getElementById("toc-container");
+      const all = [];
+      sectionMeta.forEach(group => all.push(...group.items));
+
+      toc.innerHTML = "";
+      const list = document.createElement("div");
+      list.style.display = "grid";
+      list.style.gridTemplateColumns = "repeat(auto-fit, minmax(220px, 1fr))";
+      list.style.gap = "10px";
+
+      // Show only h2 + first few h3 to keep compact
+      const items = all.filter(i => i.level === 2 || (i.level === 3 && i.keep));
+      items.forEach((item) => {
+        const a = document.createElement("a");
+        a.href = "#" + item.id;
+        a.textContent = item.label;
+        a.style.textDecoration = "none";
+        a.style.padding = "10px 12px";
+        a.style.borderRadius = "14px";
+        a.style.border = "1px solid var(--border)";
+        a.style.background = "rgba(37,99,235,0.05)";
+        a.style.color = "var(--text)";
+        a.style.fontWeight = "850";
+        a.style.display = "block";
+        a.style.position = "relative";
+        a.style.overflow = "hidden";
+        if (item.level === 3) {
+          a.style.fontWeight = "750";
+          a.style.color = "var(--muted)";
+          a.style.background = "rgba(124,58,237,0.05)";
+        }
+
+        a.addEventListener("click", () => {
+          const target = document.getElementById(item.id);
+          if (!target) return;
+          const details = target.closest("details.collapsible");
+          if (details) details.open = true;
+        });
+
+        list.appendChild(a);
+      });
+
+      toc.appendChild(list);
+    }
+
+    function buildSectionAndNavMeta(sectionEntries) {
+      const meta = [];
+      sectionEntries.forEach((entry) => {
+        const container = entry.container;
+
+        // Headings after collapsible wrapping
+        const headings = Array.from(container.querySelectorAll("h2[id], h3[id]"));
+        const items = [];
+        let lastH2Id = null;
+        let h3Seen = 0;
+
+        headings.forEach((h) => {
+          const level = h.tagName.toLowerCase() === "h2" ? 2 : 3;
+          const label = h.textContent.trim();
+          const id = h.id;
+          if (level === 2) {
+            lastH2Id = id;
+            h3Seen = 0;
+            items.push({ level: 2, id, label });
+          } else if (level === 3 && lastH2Id) {
+            h3Seen++;
+            // Keep only first few h3 in top TOC
+            items.push({ level: 3, id, label, keep: h3Seen <= 2 });
+          }
+        });
+
+        meta.push({
+          title: entry.title,
+          icon: entry.icon,
+          defaultOpen: entry.defaultOpen,
+          itemCount: items.length,
+          items
+        });
+      });
+      return meta;
+    }
+
+    // ----------------------------
+    // Main rendering pipeline
+    // ----------------------------
+    async function loadMarkdownFile(filename) {
+      const res = await fetch(filename, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Failed to fetch ${filename}: ${res.status}`);
+      return await res.text();
+    }
+
+    async function renderAll() {
+      // Marked config
+      marked.setOptions({
+        gfm: true,
+        breaks: false,
+        headerIds: false,
+        mangle: false
+      });
+
+      const files = [
+        { filename: "README.md", tone: "overview", containerId: "content-overview", readingId: "reading-overview", entryTitle: "Overview", icon: "📘" },
+        { filename: "IMPLEMENTATION_PLAN.md", tone: "plan", containerId: "content-plan", readingId: "reading-plan", entryTitle: "Implementation Plan", icon: "🗺️" },
+        { filename: "SECURITY_GUIDE.md", tone: "security", containerId: "content-security", readingId: "reading-security", entryTitle: "Security Guide", icon: "⚠️" },
+        { filename: "FRONTEND_UX_GUIDE.md", tone: "ux", containerId: "content-frontend", readingId: "reading-frontend", entryTitle: "Frontend & UX Guide", icon: "🎨" },
+        { filename: "PHASE_1_IMPLEMENTATION.md", tone: "phase", containerId: "content-phase1", readingId: "reading-phase1", entryTitle: "Phase 1 Implementation", icon: "🚀" }
+      ];
+
+      // Load markdown
+      const mdTexts = {};
+      for (const f of files) {
+        const text = await loadMarkdownFile(f.filename);
+        mdTexts[f.filename] = text;
+      }
+
+      // Dashboard stats
+      const allText = files.map(f => mdTexts[f.filename] || "").join("\\n");
+      const completed = countRegex(allText, /✅/g);
+      const inProgress = countRegex(allText, /🔄/g);
+      const planned = countRegex(allText, /📅\\s*Planned/g);
+      const future = countRegex(allText, /🔮/g) + countRegex(allText, /📅\\s*Future/g);
+      const ready = countRegex(allText, /📝\\s*Ready/g);
+
+      const coverageMatch = allText.match(/Coverage Target:\\s*([0-9]{1,3}%\\+?)/i);
+      const coverage = coverageMatch ? coverageMatch[1] : "80%+";
+
+      // Compute progress score (simple weighting)
+      const denom = Math.max(1, completed + inProgress + planned + future + ready);
+      const progressScore = Math.min(100, Math.round(((completed + 0.6 * inProgress + 0.35 * planned + 0.15 * ready) / denom) * 100));
+
+      document.getElementById("progress-percentage").textContent = progressScore + "%";
+      document.getElementById("progress-bar").style.width = progressScore + "%";
+      document.getElementById("stat-completed").textContent = String(completed + ready);
+      document.getElementById("stat-planned").textContent = String(planned + inProgress);
+      document.getElementById("stat-future").textContent = String(future);
+      document.getElementById("stat-coverage").textContent = coverage;
+
+      document.getElementById("current-phase-indicator").textContent = "Phase 1 (Foundation & Core Infrastructure)";
+
+      // Timeline steps
+      const timeline = document.getElementById("timeline");
+      const totalReading = files.reduce((acc, f) => acc + estimateReadingMinutes(mdTexts[f.filename] || ""), 0);
+      document.getElementById("timeline-reading").textContent = `~${Math.max(1, totalReading)} min total`;
+
+      const steps = [
+        { cls: "completed", n: "1", title: "Phase 1", sub: "Weeks 1-4 • Foundation & Core Infrastructure" },
+        { cls: "planned", n: "2", title: "Phase 2", sub: "Weeks 5-10 • Core Financial Features (MVP)" },
+        { cls: "planned", n: "3", title: "Phase 3", sub: "Weeks 11-16 • Investment Tracking & Mobile" },
+        { cls: "future", n: "4", title: "Phase 4", sub: "Weeks 17-24 • AI Coach & Advanced Features" }
+      ];
+      timeline.innerHTML = "";
+      steps.forEach((s) => {
+        const stepEl = document.createElement("div");
+        stepEl.className = `timeline-step ${s.cls}`;
+        stepEl.innerHTML = `
+          <div class="dot">${s.n}</div>
+          <div>
+            <div class="step-title">${s.title}</div>
+            <div class="step-sub">${s.sub}</div>
+          </div>
+        `;
+        timeline.appendChild(stepEl);
+      });
+
+      // Render markdown into sections
+      for (const f of files) {
+        const root = document.getElementById(f.containerId);
+        const md = mdTexts[f.filename] || "";
+        root.innerHTML = marked.parse(md);
+        document.getElementById(f.readingId).textContent = `~${estimateReadingMinutes(md)} min read`;
+      }
+
+      // Post-process each section:
+      // 1) wrap tables
+      // 2) assign ids + anchors
+      // 3) collapsible h2 blocks
+      // 4) syntax highlight + copy buttons
+      // 5) sortable tables
+      const entries = [
+        { filename: "README.md", title: "Overview", icon: "📘", defaultOpen: true, container: document.getElementById("content-overview") },
+        { filename: "IMPLEMENTATION_PLAN.md", title: "Implementation Plan", icon: "🗺️", defaultOpen: true, container: document.getElementById("content-plan") },
+        { filename: "SECURITY_GUIDE.md", title: "Security Guide", icon: "⚠️", defaultOpen: false, container: document.getElementById("content-security") },
+        { filename: "FRONTEND_UX_GUIDE.md", title: "Frontend & UX", icon: "🎨", defaultOpen: false, container: document.getElementById("content-frontend") },
+        { filename: "PHASE_1_IMPLEMENTATION.md", title: "Phase 1", icon: "🚀", defaultOpen: false, container: document.getElementById("content-phase1") }
+      ];
+
+      entries.forEach((e) => {
+        const root = e.container;
+        // Tables
+        addTableWrappers(root);
+        enableSortableTables(root);
+
+        // IDs + anchors
+        assignHeadingIdsAndNavData(root);
+        addAnchorButtons(root);
+
+        // Collapsible details
+        makeH2Collapsible(root);
+      });
+
+      // After DOM surgery, highlight again and re-add copy buttons
+      entries.forEach((e) => {
+        Prism.highlightAllUnder(e.container);
+        addCopyButtons(e.container);
+      });
+
+      // Build sidebar meta + TOC
+      const sectionMeta = buildSectionAndNavMeta(entries);
+      buildSidebarNav(sectionMeta);
+      buildTopTOC(sectionMeta);
+      document.getElementById("toc-progress").textContent = "—";
+
+      // Export as Markdown
+      document.getElementById("btn-export-markdown").addEventListener("click", () => {
+        const order = ["README.md", "IMPLEMENTATION_PLAN.md", "SECURITY_GUIDE.md", "FRONTEND_UX_GUIDE.md", "PHASE_1_IMPLEMENTATION.md"];
+        const combined = order.map(name => {
+          return `# ${name}\\n\\n${mdTexts[name] || ""}\\n`;
+        }).join("\\n---\\n\\n");
+
+        const blob = new Blob([combined], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "DOCUMENTATION_COMBINED.md";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+
+      // Print-friendly download
+      document.getElementById("btn-print").addEventListener("click", () => window.print());
+
+      // Share link copies current hash
+      const getActiveHash = () => {
+        const hash = window.location.hash;
+        if (hash && hash.length > 1) return hash;
+        const first = document.querySelector(".scroll-target[id].scrolling") || document.querySelector(".scroll-target[id]");
+        if (first) return "#" + first.id;
+        return "";
+      };
+
+      document.getElementById("btn-share").addEventListener("click", async () => {
+        // Prefer hash currently in URL
+        let hash = window.location.hash || "";
+        if (!hash) {
+          // Use the top-most visible heading
+          const candidates = Array.from(document.querySelectorAll(".scroll-target[id]"));
+          if (candidates.length) hash = "#" + candidates[0].id;
+        }
+        const link = window.location.origin + window.location.pathname + hash;
+        try{
+          await navigator.clipboard.writeText(link);
+          const btn = document.getElementById("btn-share");
+          const prev = btn.textContent;
+          btn.textContent = "Link Copied!";
+          setTimeout(() => btn.textContent = prev, 1400);
+        }catch{
+          window.prompt("Copy this link:", link);
+        }
+      });
+
+      // Track active heading for share/hash updates
+      // We avoid opening details here; only set hash.
+      const allTargets = Array.from(document.querySelectorAll(".scroll-target[id]"));
+      const updateHash = new IntersectionObserver((entries) => {
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a,b) => (b.intersectionRatio || 0) - (a.intersectionRatio || 0))[0];
+        if (!visible) return;
+        const id = visible.target.id;
+        // Replace hash without jumping
+        history.replaceState(null, "", "#" + id);
+      }, { threshold: [0.2, 0.35, 0.5] });
+      allTargets.forEach(t => updateHash.observe(t));
+    }
+
+    async function start() {
+      try {
+        await renderAll();
+      } catch (err) {
+        const main = document.getElementById("content");
+        main.innerHTML = `
+          <div class="hero">
+            <h2>Failed to load markdown files</h2>
+            <p style="color: var(--muted);">
+              ${String(err && err.message ? err.message : err)}
+              <br><br>
+              Tip: serve this folder over HTTP (for example using a local dev server),
+              because many browsers block fetching <code>*.md</code> when opened as <code>file://</code>.
+            </p>
+          </div>
+        `;
+        console.error(err);
+      }
+    }
+
+    document.getElementById("dark-mode-toggle").addEventListener("click", () => {
+      const body = document.body;
+      const nextDark = !body.classList.contains("dark");
+      body.classList.toggle("dark", nextDark);
+      localStorage.setItem("theme", nextDark ? "dark" : "light");
+      document.getElementById("dark-mode-toggle").textContent = nextDark ? "☀️" : "🌙";
+    });
+
+    (function applyThemeFromStorage(){
+      const theme = localStorage.getItem("theme");
+      const dark = theme === "dark";
+      document.body.classList.toggle("dark", dark);
+      document.getElementById("dark-mode-toggle").textContent = dark ? "☀️" : "🌙";
+    })();
+
+    start();
+  </script>
+</body>
+</html>
+
