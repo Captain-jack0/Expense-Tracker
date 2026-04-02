@@ -20,12 +20,12 @@
 ## Phase 0: Project Setup
 
 ### Development Environment
-- [ ] Install Java JDK 17+
-- [ ] Install Node.js 18+
-- [ ] Install Docker Desktop
-- [ ] Install Git
-- [ ] Install IntelliJ IDEA / VS Code
-- [ ] Clone repository
+- [x] Install Java JDK 17+ (Java 22 installed)
+- [x] Install Node.js 18+ (Node.js 22.17.1 installed)
+- [x] Install Docker Desktop (Docker 29.3.1 installed)
+- [x] Install Git (Git 2.50.1 installed)
+- [x] Install IntelliJ IDEA / VS Code (VS Code 1.109.5 installed)
+- [x] Clone repository
 - [ ] Set up IDE with Kotlin plugin
 
 ### Project Initialization

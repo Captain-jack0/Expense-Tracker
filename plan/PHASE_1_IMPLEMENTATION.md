@@ -8,12 +8,12 @@
 ## Prerequisites
 
 Before starting, ensure you have:
-- [ ] Java JDK 17+ installed
-- [ ] Node.js 18+ and npm installed
-- [ ] Docker Desktop installed and running
-- [ ] Git installed
-- [ ] IDE installed (IntelliJ IDEA recommended for backend, VS Code for frontend)
-- [ ] Postman or similar API testing tool
+- [x] Java JDK 17+ installed
+- [x] Node.js 18+ and npm installed
+- [x] Docker Desktop installed and running
+- [x] Git installed
+- [x] IDE installed (IntelliJ IDEA recommended for backend, VS Code or Cursor for frontend)
+- [x] Postman or similar API testing tool
 
 ---
 
