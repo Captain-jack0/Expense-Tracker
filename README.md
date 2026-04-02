@@ -1,114 +1,291 @@
-# Expense Tracker
+# Personal Finance Tracker & Investment Assistant
 
-A full-stack expense tracking application built with React Native Web (cross-platform) and Java Spring Boot.
+A gamified personal finance application (web + mobile) that goes beyond basic expense tracking to provide investment management, goal tracking, and AI-powered financial coaching.
 
-## Project Structure
+---
 
-```
-Expense-Tracker/
-├── frontend/           # React Native Web frontend
-│   ├── src/
-│   │   ├── components/ # Reusable UI components
-│   │   ├── screens/    # Screen components
-│   │   ├── services/   # API services
-│   │   └── App.js      # Main application
-│   └── public/         # Static files
-├── backend/            # Java Spring Boot backend
-│   ├── src/main/java/com/expensetracker/
-│   │   ├── controller/ # REST controllers
-│   │   ├── model/      # Entity models
-│   │   ├── repository/ # Data repositories
-│   │   └── service/    # Business logic
-│   └── pom.xml         # Maven configuration
-└── README.md
-```
+## 📚 Documentation
 
-## Features
+This project includes comprehensive documentation to guide development:
 
-- Add, edit, and delete expenses
-- Categorize expenses (Food, Transport, Entertainment, etc.)
-- View total expenses
-- Filter by category and date range
-- Responsive design for web and mobile
+### Core Documentation
 
-## Prerequisites
+| Document | Description | Purpose |
+|----------|-------------|---------|
+| **[IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)** | Complete project roadmap | High-level overview, architecture, timeline |
+| **[SECURITY_GUIDE.md](./SECURITY_GUIDE.md)** | Security implementation | JWT, encryption, OWASP Top 10, 2FA |
+| **[FRONTEND_UX_GUIDE.md](./FRONTEND_UX_GUIDE.md)** | Frontend & animations | Framer Motion, gamification, mobile |
+| **[PHASE_1_IMPLEMENTATION.md](./PHASE_1_IMPLEMENTATION.md)** | Step-by-step setup | Week 1-4 detailed instructions |
 
-- Node.js 18+ and npm
-- Java 17+
-- Maven 3.6+
+---
 
-## Getting Started
+## 🚀 Quick Start
 
-### Backend Setup
+### Prerequisites
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
+- Java JDK 17+
+- Node.js 18+
+- Docker Desktop
+- Git
 
-2. Build and run the Spring Boot application:
-   ```bash
-   mvn spring-boot:run
-   ```
+### 1. Clone and Setup
 
-   The API will be available at `http://localhost:8080`
-
-### Frontend Setup
-
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm start
-   ```
-
-   The app will open at `http://localhost:3000`
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/expenses` | Get all expenses |
-| GET | `/api/expenses/{id}` | Get expense by ID |
-| POST | `/api/expenses` | Create new expense |
-| PUT | `/api/expenses/{id}` | Update expense |
-| DELETE | `/api/expenses/{id}` | Delete expense |
-| GET | `/api/expenses/category/{category}` | Get by category |
-| GET | `/api/expenses/categories` | Get all categories |
-| GET | `/api/expenses/date-range` | Get by date range |
-
-## Mobile Support
-
-This project uses React Native Web, which allows the same codebase to run on:
-- Web browsers
-- iOS (with Expo)
-- Android (with Expo)
-
-To run on mobile with Expo:
 ```bash
+cd "C:\Users\meryem.durgun\Desktop\Projeler\Expense Tracker"
+
+# Start database and cache
+cd backend
+docker-compose up -d
+
+# Build and run backend
+./gradlew bootRun
+
+# In new terminal, start frontend
+cd ../frontend
+npm install
+npm run dev
+```
+
+### 2. Access Application
+
+- **Frontend:** http://localhost:5173
+- **Backend API:** http://localhost:8080
+- **PostgreSQL:** localhost:5432
+- **Redis:** localhost:6379
+
+---
+
+## 🏗️ Tech Stack
+
+### Backend
+- **Language:** Kotlin
+- **Framework:** Spring Boot 3.2
+- **Database:** PostgreSQL 16
+- **Cache:** Redis 7
+- **Security:** JWT + bcrypt
+
+### Frontend (Web)
+- **Framework:** React 18
+- **Build Tool:** Vite
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Animation:** Framer Motion, Lottie
+- **Charts:** Recharts
+
+### Frontend (Mobile)
+- **Framework:** React Native (Expo)
+- **Animation:** React Native Reanimated
+- **Navigation:** React Navigation
+
+### DevOps
+- **Containerization:** Docker
+- **CI/CD:** GitHub Actions
+- **Deployment:** Vercel (web), Railway (backend)
+
+---
+
+## 📋 Project Structure
+
+```
+Expense Tracker/
+├── backend/                      # Spring Boot + Kotlin API
+│   ├── src/main/kotlin/
+│   │   └── com/financetracker/
+│   │       ├── common/          # Security, config, utils
+│   │       ├── user/            # User & auth module
+│   │       ├── transaction/     # Transaction module
+│   │       ├── goal/            # Goal tracking module
+│   │       ├── investment/      # Investment module
+│   │       └── coach/           # AI coach (Phase 4)
+│   ├── docker-compose.yml
+│   └── build.gradle.kts
+│
+├── frontend/                     # React web application
+│   ├── src/
+│   │   ├── components/          # Reusable components
+│   │   ├── pages/               # Route pages
+│   │   ├── lib/                 # API client, utilities
+│   │   ├── contexts/            # React contexts
+│   │   └── hooks/               # Custom hooks
+│   └── package.json
+│
+├── mobile/                       # React Native app
+│   ├── app/                     # Expo Router screens
+│   ├── components/              # Mobile components
+│   └── lib/                     # Shared logic
+│
+├── shared/                       # Shared code (types, validation, API)
+│   └── src/
+│       ├── types/
+│       ├── validation/
+│       └── api/
+│
+├── IMPLEMENTATION_PLAN.md
+├── SECURITY_GUIDE.md
+├── FRONTEND_UX_GUIDE.md
+├── PHASE_1_IMPLEMENTATION.md
+└── README.md (this file)
+```
+
+---
+
+## ✨ Features
+
+### Phase 1-2 (MVP) - Weeks 1-10
+- ✅ User authentication with JWT
+- ✅ Multiple account management
+- ✅ Income/expense tracking
+- ✅ Category system
+- ✅ Goal tracking with progress visualization
+- ✅ Dashboard with animated charts
+- ✅ Basic investment tracking
+
+### Phase 3 - Weeks 11-16
+- 🔄 Investment portfolio tracking
+- 🔄 React Native mobile app
+- 🔄 Code sharing between web/mobile
+
+### Phase 4 - Weeks 17-24
+- 📅 AI financial coach
+- 📅 Household accounts
+- 📅 Achievement system
+- 📅 Advanced gamification
+
+---
+
+## 🔒 Security
+
+This application implements industry-standard security practices:
+
+- **Authentication:** JWT with refresh tokens
+- **Password Storage:** bcrypt (cost factor 12)
+- **Data Encryption:** AES-256-GCM for sensitive fields
+- **Rate Limiting:** Redis-based protection
+- **2FA:** TOTP-based two-factor authentication
+- **OWASP Compliance:** Top 10 checklist implemented
+- **Audit Logging:** All financial operations tracked
+
+**See [SECURITY_GUIDE.md](./SECURITY_GUIDE.md) for complete security documentation.**
+
+---
+
+## 🎨 Gamification
+
+### Achievements
+- 🌱 Getting Started (first transaction)
+- 🔥 Week Warrior (7-day streak)
+- 🎯 Goal Setter (create first goal)
+- 🏆 Goal Crusher (complete goal)
+- 💰 Budget Master (stay under budget)
+- 📈 Portfolio Builder (10 investments)
+
+### Visual Feedback
+- Animated progress rings
+- Growing plant metaphor for savings
+- Confetti on goal completion
+- Streak fire animation
+- Level progression system
+
+---
+
+## 📱 Mobile Development
+
+### Code Sharing Strategy
+60-70% of code shared between web and mobile:
+
+- **Shared:** Types, validation, API services, business logic
+- **Platform-specific:** UI components, navigation, animations
+- **Security:** Secure storage (Expo SecureStore) for mobile tokens
+
+---
+
+## 🧪 Testing
+
+### Coverage Target: 80%+
+
+- **Unit Tests:** JUnit 5 (backend), Vitest (frontend)
+- **Integration Tests:** TestContainers (backend), MSW (frontend)
+- **E2E Tests:** Playwright for critical user flows
+
+```bash
+# Run backend tests
+cd backend
+./gradlew test
+
+# Run frontend tests
 cd frontend
-npx expo start
+npm run test
+
+# Run E2E tests
+cd frontend
+npm run test:e2e
 ```
 
-## Database
+---
 
-By default, the application uses H2 in-memory database for development.
+## 📈 Development Roadmap
 
-For production, configure MySQL in `application.properties`:
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/expensedb
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-```
+| Week | Focus | Status |
+|------|-------|--------|
+| 1-2 | Backend setup, security foundation | 📝 Ready |
+| 3-4 | User auth, JWT, frontend setup | 📝 Ready |
+| 5-6 | Account & transaction management | 📅 Planned |
+| 7-8 | Dashboard, charts, animations | 📅 Planned |
+| 9-10 | Goal tracking | 📅 Planned |
+| 11-12 | Investment module | 📅 Planned |
+| 13-14 | Mobile app setup | 📅 Planned |
+| 15-16 | Mobile core features | 📅 Planned |
+| 17-19 | AI coach | 📅 Future |
+| 20-22 | Household accounts | 📅 Future |
+| 23-24 | Polish & deployment | 📅 Future |
 
-## License
+---
 
-MIT
+## 🤝 Contributing
+
+This is a personal learning project, but contributions are welcome!
+
+1. Follow the coding standards in the documentation
+2. Write tests for new features
+3. Update documentation as needed
+4. Follow the security guidelines
+
+---
+
+## 📄 License
+
+This project is for educational purposes.
+
+---
+
+## 🔗 Resources
+
+- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+- [React Documentation](https://react.dev)
+- [React Native Documentation](https://reactnative.dev)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [JWT Introduction](https://jwt.io/introduction)
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+
+---
+
+## 💡 Next Steps
+
+1. **Read [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)** - Understand the full scope
+2. **Review [SECURITY_GUIDE.md](./SECURITY_GUIDE.md)** - Learn security practices
+3. **Follow [PHASE_1_IMPLEMENTATION.md](./PHASE_1_IMPLEMENTATION.md)** - Start building
+4. **Check [FRONTEND_UX_GUIDE.md](./FRONTEND_UX_GUIDE.md)** - Implement animations
+
+---
+
+## 📞 Support
+
+If you encounter issues:
+1. Check the documentation files
+2. Review error logs: `docker-compose logs -f`
+3. Verify environment variables are set
+4. Ensure Docker services are running: `docker ps`
+
+---
+
+**Built with ❤️ as a learning project to master full-stack development, security, and modern DevOps practices.**
