@@ -1,8 +1,8 @@
 # Personal Finance Tracker - Master Checklist
 
 > **Purpose**: Track all tasks, milestones, and deliverables across the entire project lifecycle.
-> **Last Updated**: 2025-04-02
-> **Current Phase**: Phase 0 - Planning Complete
+> **Last Updated**: 2026-04-03
+> **Current Phase**: Phase 0 - Planning Complete, Backend Hybrid Setup Configured
 
 ---
 
@@ -29,14 +29,18 @@
 - [x] Set up IDE with Kotlin plugin
 
 ### Project Initialization
-- [x] Create Spring Boot + Kotlin backend project
+- [x] Create Spring Boot + Kotlin + Java hybrid backend project
+  - [x] Java source directory configured for existing/legacy code
+  - [x] Kotlin source directory configured for new features
+  - [x] Maven build configured for both Java and Kotlin compilation
+  - [x] Full interoperability between Java and Kotlin code
 - [ ] Create React + Vite frontend project
-- [ ] Set up Gradle build configuration
+- [ ] Set up Gradle build configuration (optional - using Maven)
 - [ ] Set up package.json dependencies
 - [ ] Create docker-compose.yml
 - [ ] Set up .gitignore
 - [ ] Create .env.example files
-- [ ] Initialize Git repository
+- [x] Initialize Git repository
 
 ### Documentation
 - [x] Project plan created
