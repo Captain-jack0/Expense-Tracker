@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { authApi } from '../services/api';
 import type { User, LoginRequest, RegisterRequest, AuthResponse } from '../types';
 
@@ -6,7 +6,7 @@ import type { User, LoginRequest, RegisterRequest, AuthResponse } from '../types
 // Auth Context Type
 // ============================================
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -17,10 +17,22 @@ interface AuthContextType {
 }
 
 // ============================================
-// Create Context
+// Create Context (internal, not exported)
 // ============================================
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// ============================================
+// Custom Hook to Use Auth Context
+// ============================================
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 // ============================================
 // Auth Provider Component
@@ -135,17 +147,3 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-// ============================================
-// Custom Hook to Use Auth Context
-// ============================================
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-export default AuthContext;

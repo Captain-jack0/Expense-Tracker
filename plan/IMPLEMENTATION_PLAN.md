@@ -10,9 +10,9 @@ Build a gamified personal finance application (web + mobile) that goes beyond ba
 
 ## Tech Stack Decision
 
-### Backend: Spring Boot + Kotlin 📅
+### Backend: Spring Boot + Java 17 📅
 - Enterprise-grade, industry standard
-- Null safety and modern syntax
+- Lombok for reducing boilerplate
 - Robust ecosystem for financial applications
 - High job market value
 
@@ -218,7 +218,7 @@ CREATE INDEX idx_investments_user_id ON investments(user_id);
 ### Phase 1: Foundation & Core Infrastructure (Weeks 1-4)
 
 #### Key Deliverables (Planned):
-- 📅 Spring Boot + Kotlin project setup
+- 📅 Spring Boot + Java project setup
 - 📅 PostgreSQL + Redis via Docker Compose
 - 📅 Security configuration (JWT, encryption)
 - 📅 User registration and authentication
