@@ -626,34 +626,103 @@ class AchievementService(
 
 ---
 
+## n8n Workflow Automation Setup
+
+### Day 15-17: n8n Docker Deployment
+
+Deploy n8n for automated financial workflows. See [N8N_DEPLOYMENT.md](./N8N_DEPLOYMENT.md) for complete setup guide.
+
+#### Step 1: Add n8n to Docker Compose
+
+```yaml
+# backend/docker-compose.yml - add n8n service
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: finance-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_DATABASE=n8n
+      - GENERIC_TIMEZONE=Europe/Istanbul
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - postgres
+```
+
+#### Step 2: Create Automation Endpoints
+
+```kotlin
+// backend/src/main/kotlin/com/financetracker/automation/controller/AutomationController.kt
+@RestController
+@RequestMapping("/api/automation")
+class AutomationController(
+    private val recurringService: RecurringTransactionService,
+    private val coachService: CoachService
+) {
+    @GetMapping("/recurring/due")
+    fun getDueRecurringTransactions() = recurringService.getDueTransactions()
+
+    @PostMapping("/coach/batch-insights")
+    fun generateBatchInsights(@RequestBody userIds: List<UUID>) {
+        userIds.forEach { coachService.generateMonthlyInsights(it) }
+    }
+}
+```
+
+#### Step 3: Configure n8n Workflows
+
+Create these automated workflows in n8n:
+
+| Workflow | Schedule | Purpose |
+|----------|----------|---------|
+| Recurring Transactions | Daily 00:00 | Create scheduled bills/subscriptions |
+| Weekly AI Insights | Sunday 09:00 | Generate personalized financial advice |
+| Budget Alerts | Daily 20:00 | Notify users approaching budget limits |
+| Investment Prices | Daily 22:00 | Update portfolio prices from APIs |
+| Data Backup | Daily 03:00 | Export and backup user data |
+
+---
+
 ## Final Deployment
 
-### Day 22-28: Production Deployment
+### Day 18-28: Production Deployment
 
 1. **Environment Setup**
    - Configure production secrets
    - Set up SSL certificates
    - Configure CDN
+   - Deploy n8n with production PostgreSQL
 
 2. **Database Migration**
    - Backup strategy
    - Migration scripts tested
    - Rollback plan
+   - n8n database initialization
 
 3. **Monitoring**
    - Set up logging (ELK stack)
    - Performance monitoring (New Relic/Datadog)
    - Error tracking (Sentry)
+   - n8n execution monitoring
 
 4. **CI/CD**
    - GitHub Actions workflows
    - Automated testing
    - Staged deployments
+   - n8n workflow version control
 
 5. **Documentation**
    - API documentation (Swagger)
    - User guide
    - Admin guide
+   - n8n workflow documentation
 
 ---
 

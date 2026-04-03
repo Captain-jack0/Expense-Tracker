@@ -17,6 +17,7 @@ This project includes comprehensive documentation to guide development:
 | **[SECURITY_GUIDE.md](./SECURITY_GUIDE.md)** | Security implementation | JWT, encryption, OWASP Top 10, 2FA |
 | **[FRONTEND_UX_GUIDE.md](./FRONTEND_UX_GUIDE.md)** | Frontend & animations | Framer Motion, gamification, mobile |
 | **[PHASE_1_IMPLEMENTATION.md](./PHASE_1_IMPLEMENTATION.md)** | Step-by-step setup | Week 1-4 detailed instructions |
+| **[N8N_DEPLOYMENT.md](./N8N_DEPLOYMENT.md)** | Workflow automation | n8n Docker setup, automated workflows |
 
 ---
 
@@ -53,6 +54,7 @@ npm run dev
 - **Backend API:** http://localhost:8080
 - **PostgreSQL:** localhost:5432
 - **Redis:** localhost:6379
+- **n8n Automation:** http://localhost:5678
 
 ---
 
@@ -82,6 +84,7 @@ npm run dev
 - **Containerization:** Docker
 - **CI/CD:** GitHub Actions
 - **Deployment:** Vercel (web), Railway (backend)
+- **Workflow Automation:** n8n (Docker)
 
 ---
 
