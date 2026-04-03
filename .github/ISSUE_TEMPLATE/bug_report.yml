@@ -1,0 +1,101 @@
+name: Bug Report
+description: Report a bug in the Expense Tracker
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this bug! Please provide as much detail as possible.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear and concise description of the bug
+      placeholder: "When I click X, Y happens instead of Z..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen?
+      placeholder: "The application should..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happens?
+      placeholder: "Instead, the application..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the application is affected?
+      options:
+        - Frontend - Dashboard
+        - Frontend - Transactions
+        - Frontend - Goals
+        - Frontend - Investments
+        - Frontend - Authentication
+        - Backend - API
+        - Backend - Database
+        - Backend - Security
+        - Mobile App
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Critical - App crashes or data loss
+        - High - Major feature broken
+        - Medium - Feature partially broken
+        - Low - Minor issue or cosmetic
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser/Environment
+      description: Browser and version, or environment details
+      placeholder: "Chrome 120, Windows 11"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs
+      description: Any error messages or console logs?
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain the problem

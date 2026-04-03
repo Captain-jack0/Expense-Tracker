@@ -37,10 +37,18 @@ Build a gamified personal finance application (web + mobile) that goes beyond ba
 - Vercel (web frontend deployment)
 - Railway or Render (backend + PostgreSQL)
 
+### Workflow Automation: n8n 📅
+- Self-hosted via Docker for workflow automation
+- Handles recurring transactions, scheduled notifications
+- AI Coach scheduling and data aggregation
+- Webhook integrations for external services
+- See [N8N_DEPLOYMENT.md](./N8N_DEPLOYMENT.md) for setup guide
+
 ### DevOps (Post-MVP): Full Stack
 - Kubernetes + Rancher
 - Jenkins
 - Comprehensive monitoring
+- n8n production cluster with PostgreSQL backend
 
 ## Architecture: Modular Monolith → Microservices
 
