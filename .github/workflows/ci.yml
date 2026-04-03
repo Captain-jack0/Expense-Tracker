@@ -6,6 +6,10 @@ on:
   push:
     branches: [main, develop]
 
+permissions:
+  contents: read
+  issues: write
+
 env:
   JAVA_VERSION: '17'
   NODE_VERSION: '20'
@@ -110,9 +114,70 @@ jobs:
 
     steps:
       - name: Check Results
+        id: check
         run: |
           if [ "${{ needs.backend.result }}" == "failure" ] || [ "${{ needs.frontend.result }}" == "failure" ]; then
             echo "::error::CI failed. Check backend and frontend jobs for details."
+            echo "failed=true" >> $GITHUB_OUTPUT
             exit 1
           fi
           echo "All CI checks passed!"
+
+      - name: Create Issue on Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `❌ CI Failed: ${context.workflow}`;
+            const body = `## CI Build Failed
+
+            **Branch:** \`${{ github.ref_name }}\`
+            **Commit:** \`${{ github.sha }}\`
+            **Triggered by:** @${{ github.actor }}
+
+            ### Job Results
+            | Job | Status |
+            |-----|--------|
+            | Backend | ${{ needs.backend.result }} |
+            | Frontend | ${{ needs.frontend.result }} |
+
+            ### Links
+            - [View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [View Commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+
+            ---
+            *This issue was automatically created by GitHub Actions*`;
+
+            // Check if similar issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci-failure'
+            });
+
+            const existingIssue = issues.data.find(issue =>
+              issue.title.includes('CI Failed') &&
+              issue.body.includes('${{ github.ref_name }}')
+            );
+
+            if (existingIssue) {
+              // Add comment to existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: `🔄 **CI failed again**\n\nCommit: \`${{ github.sha }}\`\n[View Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+              });
+              console.log(`Added comment to existing issue #${existingIssue.number}`);
+            } else {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['bug', 'ci-failure']
+              });
+              console.log('Created new issue');
+            }
