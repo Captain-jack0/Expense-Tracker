@@ -35,7 +35,11 @@
   - [x] Maven build configured for both Java and Kotlin compilation
   - [x] Full interoperability between Java and Kotlin code
 - [ ] Create React + Vite frontend project
-- [ ] Set up Gradle build configuration (optional - using Maven)
+- [x] Set up Maven build configuration (pom.xml)
+  - [x] Spring Boot dependencies configured
+  - [x] Database drivers added (H2, MySQL)
+  - [x] Lombok configured
+  - [x] Build plugins configured
 - [ ] Set up package.json dependencies
 - [ ] Create docker-compose.yml
 - [ ] Set up .gitignore
