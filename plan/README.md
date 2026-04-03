@@ -33,6 +33,9 @@ This project includes comprehensive documentation to guide development:
 ### 1. Clone and Setup
 
 ```bash
+#To start planning html
+python -m http.server 8000
+
 cd "C:\Users\meryem.durgun\Desktop\Projeler\Expense Tracker"
 
 # Start database and cache
@@ -50,6 +53,7 @@ npm run dev
 
 ### 2. Access Application
 
+- **Planner** http://localhost:8000
 - **Frontend:** http://localhost:5173
 - **Backend API:** http://localhost:8080
 - **PostgreSQL:** localhost:5432
