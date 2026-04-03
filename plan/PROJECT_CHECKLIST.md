@@ -29,14 +29,22 @@
 - [ ] Set up IDE with Kotlin plugin
 
 ### Project Initialization
-- [ ] Create Spring Boot + Kotlin backend project
+- [x] Create Spring Boot + Kotlin + Java hybrid backend project
+  - [x] Java source directory configured for existing/legacy code
+  - [x] Kotlin source directory configured for new features
+  - [x] Maven build configured for both Java and Kotlin compilation
+  - [x] Full interoperability between Java and Kotlin code
 - [ ] Create React + Vite frontend project
-- [ ] Set up Gradle build configuration
+- [x] Set up Maven build configuration (pom.xml)
+  - [x] Spring Boot dependencies configured
+  - [x] Database drivers added (H2, MySQL)
+  - [x] Lombok configured
+  - [x] Build plugins configured
 - [ ] Set up package.json dependencies
 - [ ] Create docker-compose.yml
 - [ ] Set up .gitignore
 - [ ] Create .env.example files
-- [ ] Initialize Git repository
+- [x] Initialize Git repository
 
 ### Documentation
 - [x] Project plan created
