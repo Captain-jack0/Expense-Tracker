@@ -31,14 +31,16 @@ This project includes comprehensive documentation to guide development:
 ### 1. Clone and Setup
 
 ```bash
-cd "C:\Users\meryem.durgun\Desktop\Projeler\Expense Tracker"
+cd "C:\Users\meryem.durgun\Desktop\Projeler\Expense Tracker\Expense-Tracker"
 
 # Start database and cache
 cd backend
 docker-compose up -d
 
-# Build and run backend
-./gradlew bootRun
+# Build and run backend (Maven)
+mvn spring-boot:run
+# OR for Windows:
+# mvnw.cmd spring-boot:run
 
 # In new terminal, start frontend
 cd ../frontend
@@ -58,8 +60,12 @@ npm run dev
 ## 🏗️ Tech Stack
 
 ### Backend
-- **Language:** Kotlin
+- **Languages:** Kotlin + Java (Hybrid)
+  - **Java:** Existing/legacy code, production-proven features
+  - **Kotlin:** New features, modern implementations
+  - **Interoperability:** Full compatibility between Java and Kotlin
 - **Framework:** Spring Boot 3.2
+- **Build Tool:** Maven
 - **Database:** PostgreSQL 16
 - **Cache:** Redis 7
 - **Security:** JWT + bcrypt
@@ -73,9 +79,11 @@ npm run dev
 - **Charts:** Recharts
 
 ### Frontend (Mobile)
-- **Framework:** React Native (Expo)
+- **Framework:** React Native (Expo) for cross-platform
+- **Android Native:** Kotlin (planned for native Android app)
 - **Animation:** React Native Reanimated
 - **Navigation:** React Navigation
+- **Backend Integration:** Same Spring Boot API (Java + Kotlin)
 
 ### DevOps
 - **Containerization:** Docker
@@ -88,17 +96,21 @@ npm run dev
 
 ```
 Expense Tracker/
-├── backend/                      # Spring Boot + Kotlin API
-│   ├── src/main/kotlin/
-│   │   └── com/financetracker/
-│   │       ├── common/          # Security, config, utils
-│   │       ├── user/            # User & auth module
-│   │       ├── transaction/     # Transaction module
-│   │       ├── goal/            # Goal tracking module
-│   │       ├── investment/      # Investment module
-│   │       └── coach/           # AI coach (Phase 4)
+├── backend/                      # Spring Boot + Kotlin + Java API
+│   ├── src/main/java/           # Java source (existing/legacy)
+│   │   └── com/expensetracker/
+│   │       ├── controller/      # REST controllers
+│   │       ├── model/           # Domain models
+│   │       ├── repository/      # Data access
+│   │       └── service/         # Business logic
+│   ├── src/main/kotlin/         # Kotlin source (new features)
+│   │   └── com/expensetracker/
+│   │       ├── controller/      # REST controllers
+│   │       ├── model/           # Domain models
+│   │       ├── repository/      # Data access
+│   │       └── service/         # Business logic
 │   ├── docker-compose.yml
-│   └── build.gradle.kts
+│   └── pom.xml                  # Maven build configuration
 │
 ├── frontend/                     # React web application
 │   ├── src/
@@ -208,9 +220,11 @@ This application implements industry-standard security practices:
 - **E2E Tests:** Playwright for critical user flows
 
 ```bash
-# Run backend tests
+# Run backend tests (Maven)
 cd backend
-./gradlew test
+mvn test
+# OR for Windows:
+# mvnw.cmd test
 
 # Run frontend tests
 cd frontend
