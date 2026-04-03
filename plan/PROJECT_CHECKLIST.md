@@ -1,8 +1,8 @@
 # Personal Finance Tracker - Master Checklist
 
 > **Purpose**: Track all tasks, milestones, and deliverables across the entire project lifecycle.
-> **Last Updated**: 2025-04-02
-> **Current Phase**: Phase 0 - Planning Complete
+> **Last Updated**: 2026-04-03
+> **Current Phase**: Phase 0 - Planning Complete, Backend Hybrid Setup Configured
 
 ---
 
@@ -26,7 +26,7 @@
 - [x] Install Git (Git 2.50.1 installed)
 - [x] Install IntelliJ IDEA / VS Code (VS Code 1.109.5 installed)
 - [x] Clone repository
-- [ ] Set up IDE with Kotlin plugin
+- [x] Set up IDE with Kotlin plugin
 
 ### Project Initialization
 - [x] Create Spring Boot + Kotlin + Java hybrid backend project
