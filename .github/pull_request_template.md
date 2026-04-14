@@ -43,6 +43,11 @@ Closes #
 - [ ] Lint passes (`npm run lint`)
 - [ ] Build succeeds (`npm run build`)
 
+### E2E (Playwright — otomatik tetiklenir)
+- [ ] `backend/**`, `frontend/**` veya `e2e/**` değişti → E2E workflow otomatik koşar
+- [ ] Yeni kullanıcı akışı eklendiyse `e2e/tests/` altına smoke veya flow testi eklendi
+- [ ] Kod değişmediği halde E2E istiyorsan PR'a `e2e` label'ı ekle veya `Actions → E2E Tests → Run workflow` ile elle tetikle
+
 ### Manual Testing
 - [ ] Tested locally in browser
 - [ ] Tested edge cases

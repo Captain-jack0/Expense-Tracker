@@ -41,6 +41,24 @@ updates:
           - "typescript*"
           - "vite*"
 
+  # E2E - Playwright
+  - package-ecosystem: "npm"
+    directory: "/e2e"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "e2e"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      playwright:
+        patterns:
+          - "@playwright/*"
+          - "playwright*"
+
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
