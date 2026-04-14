@@ -205,7 +205,11 @@ jobs:
           fi
 
       - name: Create Issue on Security Failure
-        if: failure()
+        # Only open auto-issues when main itself regresses, or when the
+        # weekly scheduled scan finds a new vulnerability. PR failures
+        # are already visible as red checks on the PR; opening an issue
+        # on every PR failure duplicates signal and floods the tracker.
+        if: failure() && (github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
         uses: actions/github-script@v9
         with:
           script: |
