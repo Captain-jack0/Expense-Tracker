@@ -25,6 +25,18 @@ updates:
       - "frontend"
     commit-message:
       prefix: "chore(deps)"
+    # ESLint 10 is blocked upstream: eslint-plugin-react-hooks@7
+    # does not yet accept eslint@^10.0.0. Dependabot keeps reopening
+    # the same unmergeable bump every week, so we ignore the major
+    # version until the plugin ecosystem catches up.
+    # TODO: remove this ignore block once eslint-plugin-react-hooks
+    # publishes a release that accepts eslint@^10, then follow up
+    # with a manual eslint-ecosystem upgrade PR.
+    ignore:
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
     groups:
       react:
         patterns:
