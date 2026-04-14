@@ -35,11 +35,20 @@ updates:
           - "@testing-library/*"
           - "vitest*"
           - "@vitest/*"
+      # All ESLint/TypeScript/Vite packages are bumped together so
+       # peer-dependency conflicts (e.g. @eslint/js vs eslint major
+       # version drift) can never land as separate Dependabot PRs.
       dev-tools:
         patterns:
-          - "eslint*"
-          - "typescript*"
-          - "vite*"
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "@eslint-community/*"
+          - "typescript"
+          - "typescript-eslint"
+          - "@typescript-eslint/*"
+          - "vite"
+          - "@vitejs/*"
 
   # E2E - Playwright
   - package-ecosystem: "npm"
