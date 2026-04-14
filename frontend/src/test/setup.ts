@@ -16,16 +16,17 @@ Object.defineProperty(window, 'matchMedia', {
 })
 
 // Mock ResizeObserver for Recharts and other components
-global.ResizeObserver = class ResizeObserver {
+globalThis.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
 }
 
 // Mock IntersectionObserver for lazy loading components
-global.IntersectionObserver = class IntersectionObserver {
+globalThis.IntersectionObserver = class IntersectionObserver {
   root = null
   rootMargin = ''
+  scrollMargin = ''
   thresholds = []
   observe() {}
   unobserve() {}

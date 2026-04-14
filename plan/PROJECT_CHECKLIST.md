@@ -26,14 +26,13 @@
 - [x] Install Git (Git 2.50.1 installed)
 - [x] Install IntelliJ IDEA / VS Code (VS Code 1.109.5 installed)
 - [x] Clone repository
-- [x] Set up IDE with Kotlin plugin
+- [x] Set up IDE with Java support
 
 ### Project Initialization
-- [x] Create Spring Boot + Kotlin + Java hybrid backend project
-  - [x] Java source directory configured for existing/legacy code
-  - [x] Kotlin source directory configured for new features
-  - [x] Maven build configured for both Java and Kotlin compilation
-  - [x] Full interoperability between Java and Kotlin code
+- [x] Create Spring Boot + Java backend project
+  - [x] Java source directory configured
+  - [x] Maven build configured for Java compilation
+  - [x] Lombok configured for boilerplate reduction
 - [x] Create React + Vite frontend project
 - [x] Set up Maven build configuration (pom.xml)
   - [x] Spring Boot dependencies configured

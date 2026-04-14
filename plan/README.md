@@ -65,8 +65,8 @@ npm run dev
 ## 🏗️ Tech Stack
 
 ### Backend
-- **Language:** Kotlin
-- **Framework:** Spring Boot 3.2
+- **Language:** Java 17
+- **Framework:** Spring Boot 3.3
 - **Database:** PostgreSQL 16
 - **Cache:** Redis 7
 - **Security:** JWT + bcrypt
@@ -96,8 +96,8 @@ npm run dev
 
 ```
 Expense Tracker/
-├── backend/                      # Spring Boot + Kotlin API
-│   ├── src/main/kotlin/
+├── backend/                      # Spring Boot + Java API
+│   ├── src/main/java/
 │   │   └── com/financetracker/
 │   │       ├── common/          # Security, config, utils
 │   │       ├── user/            # User & auth module
