@@ -1,7 +1,7 @@
 # Personal Finance Tracker - Master Checklist
 
 > **Purpose**: Track all tasks, milestones, and deliverables across the entire project lifecycle.
-> **Last Updated**: 2026-04-03
+> **Last Updated**: 2026-04-14
 > **Current Phase**: Phase 0 - Planning Complete, Backend Hybrid Setup Configured
 
 ---
@@ -41,8 +41,24 @@
   - [x] Build plugins configured
 - [x] Set up package.json dependencies
 - [ ] Create docker-compose.yml
+  - Scope for the initial compose (local dev only):
+    - [ ] Backend service (built from `backend/Dockerfile`, multi-stage Maven)
+    - [ ] MySQL 8.4 service with named volume for persistence
+    - [ ] Redis 7 service (infrastructure ready — backend wiring lands in Phase 1 Redis Setup)
+    - [ ] Isolated bridge network, healthcheck-gated `depends_on`
+    - [ ] Env-overridable ports via `.env` (MYSQL_PORT / REDIS_PORT / BACKEND_PORT)
+  - Intentionally **out of scope** for the initial compose (design decisions):
+    - Frontend service — deployment target is Vercel; local dev uses `npm run dev` for hot reload
+    - Production compose / Kubernetes manifests — tracked under Production Deployment below
+    - Observability sidecar (Prometheus / Grafana / Loki) — tracked under Monitoring Setup below
+  - DevOps follow-ups (post-MVP, optional, low priority):
+    - [ ] Add `docker-compose.override.yml` for per-developer customizations (custom ports, volume mounts, debug flags)
+    - [ ] Switch the E2E workflow from jar + `vite preview` to `docker compose up` so CI and local dev use the identical stack
 - [ ] Set up .gitignore
 - [ ] Create .env.example files
+  - [ ] Root-level `.env.example` for docker-compose variables
+  - [ ] `backend/.env.example` for Spring Boot profile overrides (if/when needed)
+  - [ ] `frontend/.env.example` for `VITE_*` variables
 - [x] Initialize Git repository
 
 ### Documentation
@@ -91,11 +107,14 @@
 - [ ] Write integration tests for auth endpoints
 
 #### Redis Setup
-- [ ] Configure Redis connection
+> The Redis **container** is already provisioned by `docker-compose.yml` (Phase 0).
+> The tasks below wire the backend application to that container.
+- [ ] Add `spring-boot-starter-data-redis` dependency to `backend/pom.xml`
+- [ ] Configure Redis connection (host: `cache`, port: `6379` inside compose network)
 - [ ] Set up RedisTemplate
 - [ ] Implement session storage
 - [ ] Implement rate limiting cache
-- [ ] Test Redis connection
+- [ ] Test Redis connection from backend container
 - [ ] Configure Redis for development/production
 
 ### Week 3-4: Frontend Foundation
@@ -416,6 +435,8 @@
 - [ ] Environment variables documented and secured
 - [ ] Database migration strategy tested
 - [ ] SSL/TLS certificates obtained and configured
+  - [ ] Pick a reverse proxy strategy: Traefik / nginx / Caddy / platform-managed (Railway, Render)
+  - [ ] Enforce HSTS + redirect HTTP → HTTPS
 - [ ] Domain name registered and DNS configured
 - [ ] Backup strategy implemented and tested
 - [ ] Monitoring and logging configured
@@ -423,6 +444,10 @@
 - [ ] CORS policies reviewed
 - [ ] Security headers configured
 - [ ] Error tracking setup (Sentry or similar)
+- [ ] Production orchestration manifests
+  - [ ] Production `docker-compose.prod.yml` (or Kubernetes manifests if using K8s — see IMPLEMENTATION_PLAN.md "DevOps (Post-MVP): Full Stack")
+  - [ ] Secrets delivered via env / secret manager, never baked into images
+  - [ ] Image tagging strategy (git SHA, semver) instead of `:latest`
 
 ### Deployment Steps
 - [ ] Database backed up before migration
@@ -445,6 +470,7 @@
 ### Monitoring Setup
 - [ ] Configure error tracking (Sentry/Rollbar)
 - [ ] Configure performance monitoring (New Relic/DataDog)
+  - Self-hosted alternative: Prometheus + Grafana (metrics) + Loki (logs) + Alertmanager — decision deferred until production infrastructure choice is made
 - [ ] Configure uptime monitoring (UptimeRobot/Pingdom)
 - [ ] Configure log aggregation
 - [ ] Set up critical alerts (email/SMS)
