@@ -48,10 +48,16 @@
     - [ ] Isolated bridge network, healthcheck-gated `depends_on`
     - [ ] Env-overridable ports via `.env` (MYSQL_PORT / REDIS_PORT / BACKEND_PORT)
   - Intentionally **out of scope** for the initial compose (design decisions):
-    - Frontend service — deployment target is Vercel; local dev uses `npm run dev` for hot reload
     - Production compose / Kubernetes manifests — tracked under Production Deployment below
     - Observability sidecar (Prometheus / Grafana / Loki) — tracked under Monitoring Setup below
   - DevOps follow-ups (post-MVP, optional, low priority):
+    - [ ] Add frontend service to `docker-compose.yml`
+      - [ ] `frontend/Dockerfile` — multi-stage: node build (`npm ci && npm run build`) → nginx/caddy runtime serving `dist/`
+      - [ ] Build-time `VITE_API_URL` arg pointing at the `backend` service inside the compose network
+      - [ ] Runtime port overridable via `FRONTEND_PORT` in `.env` (default 5173 or 8081 to avoid colliding with Vite dev server)
+      - [ ] `frontend/.dockerignore` excluding `node_modules/`, `dist/`, coverage, etc.
+      - [ ] Keep `npm run dev` as the primary local workflow — compose frontend is for full-stack demos and parity checks, not daily dev
+      - [ ] Vercel remains the production deployment target; this service is local/compose-only
     - [ ] Add `docker-compose.override.yml` for per-developer customizations (custom ports, volume mounts, debug flags)
     - [ ] Switch the E2E workflow from jar + `vite preview` to `docker compose up` so CI and local dev use the identical stack
 - [ ] Set up .gitignore
