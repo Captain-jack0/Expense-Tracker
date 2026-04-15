@@ -1,0 +1,33 @@
+# Exclude everything the build doesn't actually need so the Docker
+# build context stays small and unrelated file changes don't bust
+# the image cache.
+
+# Maven build output
+target/
+*.jar
+*.war
+
+# IDE / OS noise
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+hs_err_pid*.log
+
+# Git (context only — won't affect final image)
+.git/
+.gitignore
+.gitattributes
+
+# Tests are compiled inside the build stage from src/ — any stray
+# local test artifacts are irrelevant.
+backend.log
+backend.pid
+
+# Docker itself
+Dockerfile
+.dockerignore

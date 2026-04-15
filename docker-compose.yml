@@ -1,0 +1,141 @@
+# Expense Tracker - Local Development Stack
+# ============================================
+# Brings up the backend, its MySQL database, and a Redis cache in
+# one command:
+#
+#     docker compose up -d
+#
+# The frontend is NOT part of this stack — run it with `npm run dev`
+# from ./frontend for hot-reload. The compose stack is focused on
+# backend + stateful services so developers get a consistent
+# database/cache regardless of their local install.
+#
+# Environment variables are read from .env (see .env.example for
+# the full list). Every value has a sensible default so the stack
+# works out of the box with `docker compose up -d` + nothing else.
+#
+# Port conflicts: override any port by setting MYSQL_PORT /
+# REDIS_PORT / BACKEND_PORT in your local .env file. The default
+# ports are standard (3306/6379/8080) so they may collide with
+# services already running on the host.
+
+services:
+  # --------------------------------------------
+  # MySQL 8.4 — primary application database
+  # --------------------------------------------
+  db:
+    image: mysql:8.4
+    container_name: expense-tracker-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-expensedb}
+      MYSQL_USER: ${MYSQL_USER:-expense}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-expensepass}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - localhost
+        - -u
+        - root
+        - -p${MYSQL_ROOT_PASSWORD:-rootpass}
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - expense-net
+
+  # --------------------------------------------
+  # Redis 7 — cache / future message broker
+  # --------------------------------------------
+  # Backend does NOT yet connect to Redis (no spring-data-redis
+  # dependency on the classpath). This service is here so the
+  # infrastructure is ready the moment the first cache use case
+  # lands, and so `docker compose up` matches what production will
+  # eventually look like. Safe to comment out if you want a leaner
+  # local stack.
+  cache:
+    image: redis:7.4-alpine
+    container_name: expense-tracker-cache
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - expense-net
+
+  # --------------------------------------------
+  # Backend — Spring Boot (built from ./backend)
+  # --------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: expense-tracker-backend:local
+    container_name: expense-tracker-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    environment:
+      # Activate the application-docker.properties profile
+      SPRING_PROFILES_ACTIVE: docker
+      # Datasource — env binding via Spring Boot relaxed binding
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-expensedb}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-expense}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-expensepass}
+      # Server port inside the container — mapped to host via the
+      # ports: section below
+      SERVER_PORT: "8080"
+      # JVM tuning for small dev containers
+      JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    networks:
+      - expense-net
+
+# --------------------------------------------
+# Named volumes — data persists across
+# `docker compose down` (but NOT `down -v`)
+# --------------------------------------------
+volumes:
+  mysql-data:
+    name: expense-tracker-mysql-data
+  redis-data:
+    name: expense-tracker-redis-data
+
+# --------------------------------------------
+# Isolated network so service names (db, cache,
+# backend) resolve between containers without
+# polluting the default bridge network.
+# --------------------------------------------
+networks:
+  expense-net:
+    name: expense-tracker-net
+    driver: bridge
