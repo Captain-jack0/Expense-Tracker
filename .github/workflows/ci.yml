@@ -154,7 +154,10 @@ jobs:
           echo "All relevant CI checks passed."
 
       - name: Create Issue on Failure
-        if: failure()
+        # Only open auto-issues when main itself regresses. PR failures
+        # are already visible as red checks on the PR; opening an issue
+        # on every PR failure duplicates signal and floods the tracker.
+        if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/github-script@v9
         with:
           script: |
