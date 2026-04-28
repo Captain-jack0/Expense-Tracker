@@ -76,9 +76,26 @@ jobs:
             owasp-nvd-${{ runner.os }}-
 
       - name: Backend - OWASP Dependency Check
+        # Pinned to 12.1.3 — the last release before the nanosecond-timestamp
+        # regression in 12.2.x's openvulnerability-client (it can't parse
+        # 9-digit fractional seconds in the NVD API response, the parser
+        # only accepts up to milliseconds). Re-evaluate when the upstream
+        # fix lands (track: jeremylong/DependencyCheck).
+        # TODO: revisit quarterly; roll forward when a newer version is safe.
         if: ${{ github.event_name != 'pull_request' || needs.changes.outputs.backend == 'true' }}
         working-directory: ./backend
-        run: mvn -B -ntp org.owasp:dependency-check-maven:check
+        env:
+          # Authenticated NVD tier — higher rate limits, faster cold-cache
+          # update, and a different serverside path that sidesteps the
+          # nanosecond-timestamp regression on the anonymous tier.
+          # Optional: if the secret is unset (e.g. on forks), the shell
+          # default expansion below leaves the flag empty and the plugin
+          # falls back to anonymous mode without erroring out.
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          mvn -B -ntp \
+            org.owasp:dependency-check-maven:12.1.3:check \
+            -DnvdApiKey="${NVD_API_KEY:-}"
 
       - name: Upload Backend Security Report
         if: always()
