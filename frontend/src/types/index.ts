@@ -30,31 +30,39 @@ export interface Account {
 
 export interface Category {
   id: string;
-  userId: string | null;
   name: string;
-  type: TransactionType;
+  kind: CategoryKind;
+  bucket: Bucket;
   icon: string | null;
   color: string | null;
-  parentId: string | null;
   isSystem: boolean;
-  createdAt: string;
+  sortOrder: number;
+}
+
+export interface SubCategory {
+  id: string;
+  categoryId: string;
+  name: string;
+  icon: string | null;
+  color: string | null;
+  monthlyLimit: number | null;
+  isSystem: boolean;
 }
 
 export interface Transaction {
   id: string;
-  userId: string;
-  accountId: string;
-  categoryId: string | null;
-  type: TransactionType;
+  name: string;
   amount: number;
   currency: string;
-  description: string | null;
+  categoryId: string;
+  subCategoryId: string | null;
+  type: TransactionType;
   transactionDate: string;
+  note: string | null;
+  sourceType: SourceType;
+  installmentNo: number | null;
   createdAt: string;
   updatedAt: string;
-  // Populated fields
-  account?: Account;
-  category?: Category;
 }
 
 export interface Goal {
@@ -101,10 +109,13 @@ export type AccountType =
   | 'investment'
   | 'cash';
 
-export type TransactionType =
-  | 'income'
-  | 'expense'
-  | 'transfer';
+export type TransactionType = 'INCOME' | 'EXPENSE';
+
+export type CategoryKind = 'INCOME' | 'EXPENSE';
+
+export type Bucket = 'INCOME' | 'NEEDS' | 'WANTS' | 'SAVINGS' | 'OTHER';
+
+export type SourceType = 'MANUAL' | 'RECURRING' | 'INSTALLMENT';
 
 export type GoalStatus =
   | 'active'
@@ -161,13 +172,14 @@ export interface AuthResponse {
 
 // Transactions
 export interface CreateTransactionRequest {
-  accountId: string;
-  categoryId?: string;
-  type: TransactionType;
+  name: string;
   amount: number;
   currency?: string;
-  description?: string;
+  categoryId: string;
+  subCategoryId?: string | null;
+  type: TransactionType;
   transactionDate: string;
+  note?: string | null;
 }
 
 export interface UpdateTransactionRequest extends Partial<CreateTransactionRequest> {
@@ -175,13 +187,11 @@ export interface UpdateTransactionRequest extends Partial<CreateTransactionReque
 }
 
 export interface TransactionFilters {
-  accountId?: string;
   categoryId?: string;
+  subCategoryId?: string;
   type?: TransactionType;
-  startDate?: string;
-  endDate?: string;
-  minAmount?: number;
-  maxAmount?: number;
+  from?: string;
+  to?: string;
 }
 
 // Accounts
@@ -212,11 +222,24 @@ export interface UpdateGoalRequest extends Partial<CreateGoalRequest> {
 // Categories
 export interface CreateCategoryRequest {
   name: string;
-  type: TransactionType;
-  icon?: string;
-  color?: string;
-  parentId?: string;
+  kind: CategoryKind;
+  bucket: Bucket;
+  icon?: string | null;
+  color?: string | null;
 }
+
+export type UpdateCategoryRequest = CreateCategoryRequest;
+
+// Sub-categories
+export interface CreateSubCategoryRequest {
+  categoryId: string;
+  name: string;
+  icon?: string | null;
+  color?: string | null;
+  monthlyLimit?: number | null;
+}
+
+export type UpdateSubCategoryRequest = CreateSubCategoryRequest;
 
 // Investments
 export interface CreateInvestmentRequest {
