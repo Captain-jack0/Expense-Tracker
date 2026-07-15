@@ -1,8 +1,12 @@
 name: E2E Tests
 
 on:
-  pull_request:
-    branches: [main, develop]
+  # E2E is STAGED OUT of PRs (Stage 3) — the app has too few real user
+  # flows for it to earn a slot on every PR yet. It runs on-demand via
+  # the Actions "Run workflow" button. To bring it back onto PRs, restore
+  # the `pull_request` trigger below.
+  #   pull_request:
+  #     branches: [main, develop]
   workflow_dispatch:
 
 permissions:

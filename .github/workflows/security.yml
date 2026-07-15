@@ -60,7 +60,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ---- Backend OWASP scan is STAGED OUT of PR/push (Stage 2) ----
+      # dependency-check is slow (~30 min on a cold cache) and depends on
+      # external feeds, so it no longer blocks PRs. It runs on the weekly
+      # `schedule` trigger only. To put it back on every PR, revert the
+      # three `github.event_name == 'schedule'` guards below to the old
+      # `!= 'pull_request' || needs.changes.outputs.backend == 'true'` form.
       - name: Set up JDK 17
+        if: ${{ github.event_name == 'schedule' }}
         uses: actions/setup-java@v5
         with:
           java-version: '17'
@@ -68,6 +75,7 @@ jobs:
           cache: 'maven'
 
       - name: Cache OWASP NVD database
+        if: ${{ github.event_name == 'schedule' }}
         uses: actions/cache@v5
         with:
           path: ~/.m2/repository/org/owasp/dependency-check-data
@@ -82,7 +90,7 @@ jobs:
         # only accepts up to milliseconds). Re-evaluate when the upstream
         # fix lands (track: jeremylong/DependencyCheck).
         # TODO: revisit quarterly; roll forward when a newer version is safe.
-        if: ${{ github.event_name != 'pull_request' || needs.changes.outputs.backend == 'true' }}
+        if: ${{ github.event_name == 'schedule' }}
         working-directory: ./backend
         env:
           # Authenticated NVD tier — higher rate limits, faster cold-cache
@@ -111,7 +119,7 @@ jobs:
         # runs finish in seconds instead of re-pulling the full feed.
 
       - name: Upload Backend Security Report
-        if: always()
+        if: ${{ always() && github.event_name == 'schedule' }}
         uses: actions/upload-artifact@v7
         with:
           name: backend-dependency-check
