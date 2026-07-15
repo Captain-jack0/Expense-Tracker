@@ -43,6 +43,16 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- API docs: springdoc-openapi serves an OpenAPI 3 spec at
+             /v3/api-docs and interactive Swagger UI at /swagger-ui.html,
+             generated from the controllers/DTOs so the docs stay in sync
+             with the code. 2.6.0 targets Spring Boot 3.3.x. -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+
         <!-- Database -->
         <dependency>
             <groupId>com.h2database</groupId>
