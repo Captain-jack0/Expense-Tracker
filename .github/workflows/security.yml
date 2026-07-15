@@ -95,7 +95,20 @@ jobs:
         run: |
           mvn -B -ntp \
             org.owasp:dependency-check-maven:12.1.3:check \
-            -DnvdApiKey="${NVD_API_KEY:-}"
+            -DnvdApiKey="${NVD_API_KEY:-}" \
+            -DossindexAnalyzerEnabled=false \
+            -DnvdValidForHours=24
+        # ossindexAnalyzerEnabled=false: Sonatype OSS Index now returns
+        # HTTP 401 for anonymous/unauthenticated requests, which aborted
+        # the whole scan (see issue #125). We rely on the NVD feed as the
+        # vulnerability source; OSS Index is a supplementary lookup that
+        # needs credentials we don't provision in CI, so it's disabled.
+        # Re-enable with -DossIndexUsername/-DossIndexPassword if a token
+        # is ever added to repo secrets.
+        #
+        # nvdValidForHours=24: skip re-downloading the ~350k-record NVD
+        # dataset when the cached copy is younger than a day, so warm-cache
+        # runs finish in seconds instead of re-pulling the full feed.
 
       - name: Upload Backend Security Report
         if: always()
