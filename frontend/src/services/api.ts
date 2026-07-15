@@ -18,6 +18,10 @@ import type {
   UpdateGoalRequest,
   Category,
   CreateCategoryRequest,
+  UpdateCategoryRequest,
+  SubCategory,
+  CreateSubCategoryRequest,
+  UpdateSubCategoryRequest,
   Investment,
   CreateInvestmentRequest,
   UpdateInvestmentRequest,
@@ -374,10 +378,66 @@ export const categoriesApi = {
     return data.data;
   },
 
+  update: async (id: string, categoryData: UpdateCategoryRequest): Promise<Category> => {
+    const { data } = await apiClient.put<ApiResponse<Category>>(
+      `/categories/${id}`,
+      categoryData
+    );
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to update category');
+    }
+    return data.data;
+  },
+
   delete: async (id: string): Promise<void> => {
     const { data } = await apiClient.delete<ApiResponse<void>>(`/categories/${id}`);
     if (!data.success) {
       throw new Error(data.error || 'Failed to delete category');
+    }
+  },
+};
+
+// ============================================
+// Sub-categories API
+// ============================================
+
+export const subCategoriesApi = {
+  getAll: async (categoryId?: string): Promise<SubCategory[]> => {
+    const { data } = await apiClient.get<ApiResponse<SubCategory[]>>('/subcategories', {
+      params: categoryId ? { categoryId } : undefined,
+    });
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to fetch sub-categories');
+    }
+    return data.data;
+  },
+
+  create: async (subCategoryData: CreateSubCategoryRequest): Promise<SubCategory> => {
+    const { data } = await apiClient.post<ApiResponse<SubCategory>>(
+      '/subcategories',
+      subCategoryData
+    );
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to create sub-category');
+    }
+    return data.data;
+  },
+
+  update: async (id: string, subCategoryData: UpdateSubCategoryRequest): Promise<SubCategory> => {
+    const { data } = await apiClient.put<ApiResponse<SubCategory>>(
+      `/subcategories/${id}`,
+      subCategoryData
+    );
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to update sub-category');
+    }
+    return data.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    const { data } = await apiClient.delete<ApiResponse<void>>(`/subcategories/${id}`);
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to delete sub-category');
     }
   },
 };
