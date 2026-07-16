@@ -169,12 +169,15 @@ Expense Tracker/
 - ✅ TypeScript strict mode
 
 ### 🔄 Phase 2 (In Progress) - Weeks 5-10
+- ✅ Income/expense tracking — categorized transactions API (`/api/transactions`) with filters
+- ✅ Category system — categories + sub-categories with monthly limits (`/api/categories`, `/api/subcategories`)
+- 🟡 Recurring & installment (*taksitli*) — data model shipped (schema-reserved fields); generation engine not yet implemented (see [docs/api/README.md](./docs/api/README.md#7-recurring--installment-behavior))
 - 📅 Multiple account management (CRUD)
-- 📅 Income/expense tracking
-- 📅 Category system
 - 📅 Goal tracking with progress visualization
 - 📅 Dashboard with animated charts (Recharts)
 - 📅 Basic investment tracking
+
+> **API reference:** see [docs/api/README.md](./docs/api/README.md) and the live Swagger UI at `/swagger-ui.html`.
 
 ### ⏳ Phase 3 (Planned) - Weeks 11-16
 - 📅 Investment portfolio tracking
