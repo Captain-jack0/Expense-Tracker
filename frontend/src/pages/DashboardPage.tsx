@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const DashboardPage: React.FC = () => {
@@ -23,9 +24,14 @@ const DashboardPage: React.FC = () => {
               Welcome back, {user?.firstName} {user?.lastName}
             </p>
           </div>
-          <button onClick={handleLogout} className="btn btn-secondary">
-            Logout
-          </button>
+          <div className="flex items-center gap-2">
+            <Link to="/categories" className="btn btn-secondary">
+              Categories
+            </Link>
+            <button onClick={handleLogout} className="btn btn-secondary">
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
