@@ -139,20 +139,20 @@
 
             <!-- JaCoCo Coverage Plugin
                  =====================================================
-                 COVERAGE GATE IS TEMPORARILY OPEN (minimum = 0.00)
+                 COVERAGE GATE ENFORCED (minimum = 0.60 line ratio)
                  =====================================================
-                 The smoke @SpringBootTest only exercises constructors,
-                 giving ~6% line coverage on the analyzed bundle. The
-                 gate would block every build until real tests exist,
-                 so it's currently relaxed to 0.00 — the jacoco report
-                 is still produced, we just don't fail on the ratio.
+                 Service-layer unit tests (Auth/Transaction/Category/
+                 SubCategory services + JwtService) put the analyzed
+                 bundle at ~75% line coverage, so the gate is set to
+                 0.60 — a ratchet that blocks regressions below 60%
+                 with headroom for small changes.
 
-                 Re-enabling plan (bump <minimum> as coverage grows):
-                   1. Write ExpenseService unit tests  → <minimum>0.40</minimum>
-                   2. Add ExpenseController tests      → <minimum>0.60</minimum>
-                   3. Full service/controller coverage → <minimum>0.80</minimum>
-                 Also shrink the <excludes> list below once non-trivial
-                 tests cover the excluded packages. -->
+                 Next steps to raise it toward 0.80:
+                   1. Add web-layer (MockMvc) controller tests.
+                   2. Test GlobalExceptionHandler + CurrentUserArgumentResolver.
+                   3. Cover/retire the legacy ExpenseService/Controller.
+                 model/** and dto/** stay excluded (Lombok data classes,
+                 trivial getters/setters). -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -196,8 +196,8 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <!-- TODO: raise to 0.80 once real tests land. See plugin comment above. -->
-                                            <minimum>0.00</minimum>
+                                            <!-- Ratchet: raise toward 0.80 as controller/handler tests land. -->
+                                            <minimum>0.60</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
