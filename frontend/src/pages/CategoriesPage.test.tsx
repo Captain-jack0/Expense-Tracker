@@ -13,11 +13,18 @@ vi.mock('../services/api', () => ({
     update: vi.fn(),
     delete: vi.fn(),
   },
+  subCategoriesApi: {
+    getAll: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
 }));
 
-import { categoriesApi } from '../services/api';
+import { categoriesApi, subCategoriesApi } from '../services/api';
 
 const mockApi = vi.mocked(categoriesApi);
+const mockSubApi = vi.mocked(subCategoriesApi);
 
 function cat(overrides: Partial<Category>): Category {
   return {
@@ -164,5 +171,20 @@ describe('CategoriesPage', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => expect(mockApi.delete).toHaveBeenCalledWith(existing.id));
+  });
+
+  it('expands a category to reveal its sub-category manager', async () => {
+    const parent = cat({ name: 'Needs', bucket: 'NEEDS' });
+    mockApi.getAll.mockResolvedValue([parent]);
+    mockSubApi.getAll.mockResolvedValue([]); // no sub-categories yet
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByLabelText('Expand Needs'));
+
+    // Empty-state guidance is shown for a category with no sub-categories
+    expect(await screen.findByText('No sub-categories yet')).toBeInTheDocument();
+    expect(mockSubApi.getAll).toHaveBeenCalledWith(parent.id);
   });
 });
