@@ -2,9 +2,9 @@ name: Security Scan
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [dev, test, production]
   push:
-    branches: [main]
+    branches: [dev]
   schedule:
     # Run weekly on Monday at 9:00 AM UTC
     - cron: '0 9 * * 1'
@@ -247,7 +247,7 @@ jobs:
         # weekly scheduled scan finds a new vulnerability. PR failures
         # are already visible as red checks on the PR; opening an issue
         # on every PR failure duplicates signal and floods the tracker.
-        if: failure() && (github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+        if: failure() && (github.event_name == 'schedule' || (github.event_name == 'push' && github.ref == 'refs/heads/dev'))
         uses: actions/github-script@v9
         with:
           script: |

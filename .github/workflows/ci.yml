@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [dev, test, production]
   push:
-    branches: [main, develop]
+    branches: [dev, test, production]
 
 permissions:
   contents: read
@@ -157,7 +157,7 @@ jobs:
         # Only open auto-issues when main itself regresses. PR failures
         # are already visible as red checks on the PR; opening an issue
         # on every PR failure duplicates signal and floods the tracker.
-        if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/dev'
         uses: actions/github-script@v9
         with:
           script: |
