@@ -25,9 +25,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
+    "@testing-library/user-event": "^14.6.3",
     "@vitest/coverage-v8": "^4.1.10",
     "@vitest/ui": "^4.1.2",
     "jsdom": "^26.1.0",
