@@ -7,6 +7,7 @@ import com.expensetracker.model.Category;
 import com.expensetracker.repository.CategoryRepository;
 import com.expensetracker.repository.SubCategoryRepository;
 import com.expensetracker.repository.TransactionRepository;
+import com.expensetracker.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,22 +21,36 @@ public class CategoryService {
     private final SubCategoryRepository subCategoryRepository;
     private final TransactionRepository transactionRepository;
     private final CategorySeeder categorySeeder;
+    private final UserRepository userRepository;
 
     public CategoryService(CategoryRepository categoryRepository,
                            SubCategoryRepository subCategoryRepository,
                            TransactionRepository transactionRepository,
-                           CategorySeeder categorySeeder) {
+                           CategorySeeder categorySeeder,
+                           UserRepository userRepository) {
         this.categoryRepository = categoryRepository;
         this.subCategoryRepository = subCategoryRepository;
         this.transactionRepository = transactionRepository;
         this.categorySeeder = categorySeeder;
+        this.userRepository = userRepository;
     }
 
-    /** Lists the user's categories, seeding sensible defaults on first access. */
+    /**
+     * Lists the user's categories, seeding sensible defaults on first access.
+     *
+     * <p>New users are seeded at registration; this lazy path covers accounts
+     * created before that. Two concurrent first requests would otherwise both
+     * see zero categories and both seed, the second failing on the
+     * (user_id, name) unique constraint with a 500. Taking a row lock on the
+     * user and re-checking the count serialises them, so exactly one seeds.
+     */
     @Transactional
     public List<CategoryDto> list(UUID userId) {
         if (categoryRepository.countByUserId(userId) == 0) {
-            categorySeeder.seedFor(userId);
+            userRepository.findByIdForUpdate(userId);
+            if (categoryRepository.countByUserId(userId) == 0) {
+                categorySeeder.seedFor(userId);
+            }
         }
         return categoryRepository.findByUserIdOrderBySortOrderAscNameAsc(userId).stream()
                 .map(CategoryDto::from)

@@ -35,14 +35,15 @@ class OpenApiDocsTest {
     }
 
     @Test
-    @DisplayName("/v3/api-docs documents the auth, expense and transaction endpoints")
+    @DisplayName("/v3/api-docs documents the auth, transaction and category endpoints (and not the removed legacy expenses API)")
     void apiDocs_documentsCoreEndpoints() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths['/api/auth/login']").exists())
                 .andExpect(jsonPath("$.paths['/api/auth/register']").exists())
-                .andExpect(jsonPath("$.paths['/api/expenses']").exists())
                 .andExpect(jsonPath("$.paths['/api/transactions']").exists())
-                .andExpect(jsonPath("$.paths['/api/categories']").exists());
+                .andExpect(jsonPath("$.paths['/api/transactions/paginated']").exists())
+                .andExpect(jsonPath("$.paths['/api/categories']").exists())
+                .andExpect(jsonPath("$.paths['/api/expenses']").doesNotExist());
     }
 }

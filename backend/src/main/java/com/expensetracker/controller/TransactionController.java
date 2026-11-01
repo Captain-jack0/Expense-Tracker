@@ -1,6 +1,7 @@
 package com.expensetracker.controller;
 
 import com.expensetracker.dto.ApiResponse;
+import com.expensetracker.dto.PageResponse;
 import com.expensetracker.dto.TransactionDto;
 import com.expensetracker.dto.TransactionRequest;
 import com.expensetracker.model.TransactionType;
@@ -36,6 +37,29 @@ public class TransactionController {
             @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return ResponseEntity.ok(ApiResponse.ok(
                 transactionService.list(userId, categoryId, subCategoryId, type, from, to)));
+    }
+
+    /**
+     * Paginated variant of {@link #list}. {@code page} is 1-based; {@code limit}
+     * is clamped to 1..{@value TransactionService#MAX_PAGE_SIZE}.
+     */
+    @GetMapping("/paginated")
+    public ResponseEntity<PageResponse<TransactionDto>> listPaginated(
+            @CurrentUser UUID userId,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "limit", defaultValue = "20") int limit,
+            @RequestParam(value = "categoryId", required = false) UUID categoryId,
+            @RequestParam(value = "subCategoryId", required = false) UUID subCategoryId,
+            @RequestParam(value = "type", required = false) TransactionType type,
+            @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return ResponseEntity.ok(transactionService.listPage(
+                userId, categoryId, subCategoryId, type, from, to, page, limit));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<TransactionDto>> get(@CurrentUser UUID userId, @PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(transactionService.get(userId, id)));
     }
 
     @PostMapping

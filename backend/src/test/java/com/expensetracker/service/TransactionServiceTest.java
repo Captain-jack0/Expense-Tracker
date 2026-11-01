@@ -1,9 +1,11 @@
 package com.expensetracker.service;
 
+import com.expensetracker.dto.PageResponse;
 import com.expensetracker.dto.TransactionDto;
 import com.expensetracker.dto.TransactionRequest;
 import com.expensetracker.exception.ApiException;
 import com.expensetracker.model.Category;
+import com.expensetracker.model.CategoryKind;
 import com.expensetracker.model.SubCategory;
 import com.expensetracker.model.Transaction;
 import com.expensetracker.model.TransactionType;
@@ -19,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
@@ -218,6 +221,75 @@ class TransactionServiceTest {
         UUID id = UUID.randomUUID();
         when(transactionRepository.findByIdAndUserId(id, userId)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.delete(userId, id)).isInstanceOf(ApiException.class);
+    }
+
+    @Test
+    @DisplayName("create fails with 400 when the transaction type doesn't match the category kind")
+    void create_typeKindMismatch() {
+        Category income = Category.builder().id(categoryId).userId(userId).name("Income")
+                .kind(CategoryKind.INCOME).build();
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.of(income));
+
+        assertThatThrownBy(() -> service.create(userId, request(null, "USD")))   // request() is EXPENSE
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("EXPENSE transaction cannot use the INCOME category 'Income'")
+                .extracting(e -> ((ApiException) e).getStatus())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        verify(transactionRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("create succeeds when the transaction type matches the category kind")
+    void create_typeKindMatch() {
+        Category needs = Category.builder().id(categoryId).userId(userId).name("Needs")
+                .kind(CategoryKind.EXPENSE).build();
+        when(categoryRepository.findByIdAndUserId(categoryId, userId)).thenReturn(Optional.of(needs));
+        when(subCategoryRepository.countByCategoryId(categoryId)).thenReturn(0L);
+        stubSaveEchoes();
+
+        assertThat(service.create(userId, request(null, "USD")).getType()).isEqualTo(TransactionType.EXPENSE);
+    }
+
+    @Test
+    @DisplayName("get returns an owned transaction, else 404")
+    void get_ownedOrNotFound() {
+        Transaction t = Transaction.builder()
+                .id(UUID.randomUUID()).userId(userId).name("Rent").categoryId(categoryId)
+                .type(TransactionType.EXPENSE).transactionDate(LocalDate.now())
+                .amount(BigDecimal.TEN).currency("USD").build();
+        t.setCreatedAt(Instant.now());
+        t.setUpdatedAt(Instant.now());
+        when(transactionRepository.findByIdAndUserId(t.getId(), userId)).thenReturn(Optional.of(t));
+        assertThat(service.get(userId, t.getId()).getName()).isEqualTo("Rent");
+
+        UUID missing = UUID.randomUUID();
+        when(transactionRepository.findByIdAndUserId(missing, userId)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.get(userId, missing))
+                .isInstanceOf(ApiException.class)
+                .extracting(e -> ((ApiException) e).getStatus())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("listPage converts the 1-based page, clamps the limit and reports totals")
+    void listPage_clampsAndReports() {
+        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
+        when(transactionRepository.search(any(), any(), any(), any(), any(), any(), pageable.capture()))
+                .thenAnswer(inv -> new PageImpl<Transaction>(List.of(), inv.getArgument(6), 250));
+
+        PageResponse<TransactionDto> result = service.listPage(userId, null, null, null, null, null, 3, 1000);
+
+        assertThat(pageable.getValue().getPageNumber()).isEqualTo(2);                       // 0-based
+        assertThat(pageable.getValue().getPageSize()).isEqualTo(TransactionService.MAX_PAGE_SIZE);
+        assertThat(result.pagination().page()).isEqualTo(3);
+        assertThat(result.pagination().limit()).isEqualTo(TransactionService.MAX_PAGE_SIZE);
+        assertThat(result.pagination().total()).isEqualTo(250);
+        assertThat(result.pagination().totalPages()).isEqualTo(3);
+        assertThat(result.success()).isTrue();
+
+        service.listPage(userId, null, null, null, null, null, 0, 0);
+        assertThat(pageable.getValue().getPageNumber()).isZero();
+        assertThat(pageable.getValue().getPageSize()).isEqualTo(1);
     }
 
     @Test

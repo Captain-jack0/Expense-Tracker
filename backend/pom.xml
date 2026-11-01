@@ -59,6 +59,16 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- Schema migrations (Flyway). Scripts live in
+             src/main/resources/db/migration/{vendor}/ (h2, mysql). -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
@@ -75,7 +85,7 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.12.6</version>
+            <version>0.13.0</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -139,18 +149,13 @@
 
             <!-- JaCoCo Coverage Plugin
                  =====================================================
-                 COVERAGE GATE ENFORCED (minimum = 0.60 line ratio)
+                 COVERAGE GATE ENFORCED (minimum = 0.80 line ratio)
                  =====================================================
-                 Service-layer unit tests (Auth/Transaction/Category/
-                 SubCategory services + JwtService) put the analyzed
-                 bundle at ~75% line coverage, so the gate is set to
-                 0.60 — a ratchet that blocks regressions below 60%
-                 with headroom for small changes.
-
-                 Next steps to raise it toward 0.80:
-                   1. Add web-layer (MockMvc) controller tests.
-                   2. Test GlobalExceptionHandler + CurrentUserArgumentResolver.
-                   3. Cover/retire the legacy ExpenseService/Controller.
+                 Service-layer unit tests plus the end-to-end MockMvc
+                 suite (ApiIntegrationTest: controllers, exception
+                 handler, argument resolver, Flyway schema) put the
+                 analyzed bundle at ~92% line coverage, so the gate is
+                 set to the project's 0.80 target.
                  model/** and dto/** stay excluded (Lombok data classes,
                  trivial getters/setters). -->
             <plugin>
@@ -196,8 +201,7 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <!-- Ratchet: raise toward 0.80 as controller/handler tests land. -->
-                                            <minimum>0.60</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

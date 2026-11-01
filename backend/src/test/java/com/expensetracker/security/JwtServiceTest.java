@@ -27,11 +27,28 @@ class JwtServiceTest {
     }
 
     @Test
-    @DisplayName("refresh token round-trips back to the same user id")
+    @DisplayName("refresh token round-trips back to the same user id and token version")
     void refreshToken_roundTrip() {
         UUID userId = UUID.randomUUID();
-        String token = jwtService.generateRefreshToken(userId);
-        assertThat(jwtService.parseRefreshToken(token)).isEqualTo(userId);
+        String token = jwtService.generateRefreshToken(userId, 3);
+        JwtService.RefreshClaims claims = jwtService.parseRefreshToken(token);
+        assertThat(claims.userId()).isEqualTo(userId);
+        assertThat(claims.tokenVersion()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("a secret shorter than 256 bits is rejected at startup")
+    void weakSecret_rejected() {
+        assertThatThrownBy(() -> new JwtService("too-short", HOUR, WEEK))
+                .isInstanceOf(io.jsonwebtoken.security.WeakKeyException.class);
+    }
+
+    @Test
+    @DisplayName("the public dev-only key still works (it only logs a warning)")
+    void devSecret_stillUsable() {
+        JwtService dev = new JwtService(JwtService.DEV_SECRET_PREFIX + "x".repeat(40), HOUR, WEEK);
+        UUID userId = UUID.randomUUID();
+        assertThat(dev.parseAccessToken(dev.generateAccessToken(userId))).isEqualTo(userId);
     }
 
     @Test
@@ -47,7 +64,7 @@ class JwtServiceTest {
     @Test
     @DisplayName("a refresh token is rejected where an access token is expected")
     void refreshToken_notAcceptedAsAccess() {
-        String refresh = jwtService.generateRefreshToken(UUID.randomUUID());
+        String refresh = jwtService.generateRefreshToken(UUID.randomUUID(), 0);
         assertThatThrownBy(() -> jwtService.parseAccessToken(refresh))
                 .isInstanceOf(AuthException.class);
     }
