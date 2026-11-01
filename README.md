@@ -13,7 +13,9 @@ This project includes comprehensive documentation to guide development:
 | Document | Description | Purpose |
 |----------|-------------|---------|
 | **[plan/IMPLEMENTATION_PLAN.md](./plan/IMPLEMENTATION_PLAN.md)** | Complete project roadmap | High-level overview, architecture, timeline |
+| **[docs/api/README.md](./docs/api/README.md)** | API reference | Auth flow, conventions, error format, endpoints |
 | **[frontend/README.md](./frontend/README.md)** | Frontend documentation | React + Vite + TypeScript setup and usage |
+| **[plan/SECURITY_GUIDE.md](./plan/SECURITY_GUIDE.md)** | Security guide | Target security design (not all of it is implemented yet — see [Security](#-security)) |
 
 ---
 
@@ -21,53 +23,73 @@ This project includes comprehensive documentation to guide development:
 
 ### Prerequisites
 
-- Java JDK 17+
-- Node.js 18+
-- Docker Desktop
+- Java JDK 17+ and Maven 3.9+
+- Node.js 20+ (what CI uses)
+- Docker Desktop (only for the optional MySQL stack)
 - Git
 
-### 1. Clone and Setup
+### 1. Clone and run (local dev — no Docker needed)
+
+The backend runs on an embedded, file-based **H2** database by default
+(`backend/data/`), so nothing else has to be installed.
 
 ```bash
-cd "C:\Users\meryem.durgun\Desktop\Projeler\Expense Tracker\Expense-Tracker"
+git clone https://github.com/Captain-jack0/Expense-Tracker.git
+cd Expense-Tracker
 
-# Start database and cache
+# Backend (http://localhost:8080). Uses a public dev JWT key and logs a
+# warning about it; set APP_JWT_SECRET to use your own.
 cd backend
-docker-compose up -d
-
-# Build and run backend (Maven)
 mvn spring-boot:run
-# OR for Windows:
-# mvnw.cmd spring-boot:run
 
-# In new terminal, start frontend
-cd ../frontend
+# In a new terminal: frontend (http://localhost:5173)
+cd frontend
 npm install
 npm run dev
 ```
 
-### 2. Access Application
+### 2. Optional: full stack on MySQL with Docker
+
+```bash
+cp .env.example .env
+# Edit .env and set APP_JWT_SECRET (required), e.g. the output of:
+#   openssl rand -base64 48
+docker compose up -d     # MySQL + Redis + backend, from the repo root
+```
+
+Compose refuses to start without `APP_JWT_SECRET`, so the containerised backend
+never signs tokens with the public dev key.
+
+### 3. Access Application
 
 - **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:8080
-- **PostgreSQL:** localhost:5432
-- **Redis:** localhost:6379
+- **Backend API:** http://localhost:8080 (Swagger UI at `/swagger-ui.html`)
+- **H2 console (local dev only):** http://localhost:8080/h2-console
+- **MySQL (Docker stack):** localhost:3306
+- **Redis (Docker stack):** localhost:6379. The container starts, but the backend does not use Redis yet.
+
+### Database migrations
+
+The schema is managed by **Flyway**. Scripts live in
+`backend/src/main/resources/db/migration/{h2,mysql}/` (one folder per database
+vendor) and Hibernate only validates against them (`ddl-auto=validate`). To
+change the schema, add a new `V<n>__description.sql` to **both** folders. A
+database created before Flyway was introduced is adopted automatically: it is
+stamped as V1 and only newer migrations are applied.
 
 ---
 
 ## 🏗️ Tech Stack
 
 ### Backend
-- **Languages:** Kotlin + Java (Hybrid)
-  - **Java:** Existing/legacy code, production-proven features
-  - **Kotlin:** New features, modern implementations
-  - **Interoperability:** Full compatibility between Java and Kotlin
-- **Framework:** Spring Boot 3.2
+- **Language:** Java 17 (Kotlin is planned, not used yet)
+- **Framework:** Spring Boot 3.3 (Web, Data JPA, Validation, Actuator)
 - **Build Tool:** Maven
-- **Database:** PostgreSQL 16
-- **Cache:** Redis 7
-- **Security:** JWT + bcrypt
-- **Build Tool:** Gradle
+- **Database:** H2 (local dev, file-based) / MySQL 8.4 (Docker stack)
+- **Migrations:** Flyway
+- **Cache:** Redis 7 is provisioned in Docker Compose but not used by the code yet
+- **Security:** JWT (jjwt, HS256) + BCrypt via `spring-security-crypto`
+- **API docs:** springdoc-openapi (Swagger UI)
 
 ### Frontend (Web)
 - **Framework:** React 19.2.4
@@ -82,12 +104,12 @@ npm run dev
 - **Validation:** Zod
 - **Date Handling:** date-fns
 
-### Frontend (Mobile)
+### Frontend (Mobile) — planned (Phase 3), not started
 - **Framework:** React Native (Expo) for cross-platform
 - **Android Native:** Kotlin (planned for native Android app)
 - **Animation:** React Native Reanimated
 - **Navigation:** React Navigation
-- **Backend Integration:** Same Spring Boot API (Java + Kotlin)
+- **Backend Integration:** Same Spring Boot API
 
 ### DevOps
 - **Containerization:** Docker + Docker Compose
@@ -99,22 +121,26 @@ npm run dev
 ## 📋 Project Structure
 
 ```
-Expense Tracker/
-├── backend/                      # Spring Boot + Kotlin + Java API
-│   ├── src/main/java/           # Java source (existing/legacy)
-│   │   └── com/expensetracker/
-│   │       ├── controller/      # REST controllers
-│   │       ├── model/           # Domain models
-│   │       ├── repository/      # Data access
-│   │       └── service/         # Business logic
-│   ├── src/main/kotlin/         # Kotlin source (new features)
-│   │   └── com/expensetracker/
-│   │       ├── controller/      # REST controllers
-│   │       ├── model/           # Domain models
-│   │       ├── repository/      # Data access
-│   │       └── service/         # Business logic
-│   ├── docker-compose.yml
+Expense-Tracker/
+├── backend/                      # Spring Boot (Java 17) API
+│   ├── src/main/java/com/expensetracker/
+│   │   ├── config/              # CORS, OpenAPI, password encoder
+│   │   ├── controller/          # REST controllers (auth, categories, sub-categories, transactions)
+│   │   ├── dto/                 # Request/response DTOs
+│   │   ├── exception/           # ApiException + GlobalExceptionHandler
+│   │   ├── model/               # JPA entities
+│   │   ├── repository/          # Spring Data repositories
+│   │   ├── security/            # JWT, @CurrentUser resolver, auth rate limiter
+│   │   └── service/             # Business logic
+│   ├── src/main/resources/
+│   │   ├── application*.properties
+│   │   └── db/migration/{h2,mysql}/   # Flyway migrations
+│   ├── Dockerfile
 │   └── pom.xml                  # Maven build configuration
+│
+├── docker-compose.yml            # MySQL + Redis + backend
+├── e2e/                          # Playwright end-to-end tests
+├── docs/api/                     # API reference
 │
 ├── frontend/                     # React + Vite + TypeScript web app
 │   ├── src/
@@ -194,17 +220,21 @@ Expense Tracker/
 
 ## 🔒 Security
 
-This application implements industry-standard security practices:
+**Implemented today:**
 
-- **Authentication:** JWT with refresh tokens
-- **Password Storage:** bcrypt (cost factor 12)
-- **Data Encryption:** AES-256-GCM for sensitive fields
-- **Rate Limiting:** Redis-based protection
-- **2FA:** TOTP-based two-factor authentication
-- **OWASP Compliance:** Top 10 checklist implemented
-- **Audit Logging:** All financial operations tracked
+- **Authentication:** JWT access tokens (15 min) + refresh tokens (7 days). Logout revokes all of the user's refresh tokens (per-user token version).
+- **Signing key:** `APP_JWT_SECRET`, which is required by the Docker profile (no fallback). Local dev uses a public key and logs a warning.
+- **Password storage:** BCrypt (Spring default cost 10). Unknown-email logins still run a BCrypt check, so timing doesn't reveal which accounts exist.
+- **Brute-force protection:** in-memory rate limit on login/register (10 attempts per 5 min, then HTTP 429).
+- **Authorization:** every resource query is scoped to the authenticated user.
+- **Error handling:** consistent JSON error envelope. Client errors return 4xx and internals are never leaked.
+- **Actuator:** only `/actuator/health` is exposed, with no details.
+- **CI:** CodeQL, npm audit, OWASP dependency-check (weekly), TruffleHog secret scanning, Dependabot.
 
-**See [SECURITY_GUIDE.md](./SECURITY_GUIDE.md) for complete security documentation.**
+**Planned, not implemented yet** (see [plan/SECURITY_GUIDE.md](./plan/SECURITY_GUIDE.md)):
+AES-256-GCM field encryption, TOTP 2FA, audit logging, a Redis-backed
+(multi-instance) rate limiter, a Spring Security filter chain, and moving tokens
+from `localStorage` to httpOnly cookies.
 
 ---
 
@@ -240,26 +270,25 @@ This application implements industry-standard security practices:
 
 ## 🧪 Testing
 
-### Coverage Target: 80%+
+### Coverage gate: 80% (enforced in CI for both backend and frontend)
 
-- **Unit Tests:** JUnit 5 (backend), Vitest (frontend)
-- **Integration Tests:** TestContainers (backend), MSW (frontend)
-- **E2E Tests:** Playwright for critical user flows
+- **Backend:** JUnit 5 + Mockito service tests, plus MockMvc integration tests that run against the real Flyway-migrated H2 schema (`ApiIntegrationTest`). JaCoCo enforces 80% line coverage in `mvn verify`.
+- **Frontend:** Vitest + Testing Library, with an 80% threshold on lines, branches, functions and statements.
+- **E2E:** Playwright smoke tests in `e2e/` (run on demand in CI).
 
 ```bash
-# Run backend tests (Maven)
+# Backend tests + coverage gate
 cd backend
-mvn test
-# OR for Windows:
-# mvnw.cmd test
+mvn verify
 
-# Run frontend tests
+# Frontend tests + coverage gate
 cd frontend
-npm run test
+npm run test:coverage
 
-# Run E2E tests
-cd frontend
-npm run test:e2e
+# E2E (needs backend on :8080 and `npm run preview` on :4173)
+cd e2e
+npm install
+npx playwright test
 ```
 
 ---
@@ -280,21 +309,20 @@ npm run test:e2e
 | 20-22 | Household accounts | 🔮 Future |
 | 23-24 | Polish & deployment | 🔮 Future |
 
-### Current Status: Phase 1 Complete ✅
+### Current Status: Phase 2 in progress 🔄
 
 **Completed:**
-- ✅ Frontend migration to Vite + React + TypeScript
-- ✅ Authentication system (Login, Register, Protected Routes)
-- ✅ JWT token management with automatic refresh
-- ✅ Centralized API service layer
-- ✅ Modern UI with Tailwind CSS
+- ✅ Frontend on Vite + React + TypeScript, with login/register and protected routes
+- ✅ Spring Boot backend with JWT auth (register, login, refresh, logout with revocation)
+- ✅ Categories and sub-categories (API + UI), default categories seeded on registration
+- ✅ Transactions API (CRUD, filters, pagination)
+- ✅ Flyway migrations, MySQL Docker stack, CI with coverage gates and security scans
 
 **Next Steps:**
-- Backend Spring Boot setup
-- PostgreSQL + Redis integration
-- User registration & authentication endpoints
+- Transaction UI and a real dashboard (the dashboard currently shows placeholder values)
 - Account management (CRUD)
-- Transaction tracking
+- Recurring and installment transaction engines
+- Goal tracking
 
 ---
 
@@ -325,7 +353,8 @@ This project is for educational purposes.
 - [Tailwind CSS Documentation](https://tailwindcss.com)
 
 ### Database & Security
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [MySQL Documentation](https://dev.mysql.com/doc/)
+- [Flyway Documentation](https://documentation.red-gate.com/flyway)
 - [Redis Documentation](https://redis.io/docs/)
 - [JWT Introduction](https://jwt.io/introduction)
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
@@ -340,9 +369,9 @@ This project is for educational purposes.
 ## 💡 Next Steps
 
 1. **Read [plan/IMPLEMENTATION_PLAN.md](./plan/IMPLEMENTATION_PLAN.md)** - Understand the full scope
-2. **Review [frontend/README.md](./frontend/README.md)** - Frontend setup and architecture
-3. **Start Backend Development** - Spring Boot + Kotlin setup
-4. **Implement Phase 2** - Account & transaction management
+2. **Review [docs/api/README.md](./docs/api/README.md)** - API conventions and endpoints
+3. **Review [frontend/README.md](./frontend/README.md)** - Frontend setup and architecture
+4. **Continue Phase 2** - Transaction UI, dashboard, account management
 
 ---
 
@@ -351,10 +380,10 @@ This project is for educational purposes.
 If you encounter issues:
 
 1. **Check documentation:** `frontend/README.md`, `plan/IMPLEMENTATION_PLAN.md`
-2. **Review error logs:** `docker-compose logs -f`
-3. **Verify environment variables:** `.env` files are configured
+2. **Review error logs:** `docker compose logs -f` (Docker stack) or the `mvn spring-boot:run` console
+3. **Verify environment variables:** `.env` exists and `APP_JWT_SECRET` is set (Docker stack)
 4. **Ensure Docker services running:** `docker ps`
-5. **Check Node version:** `node --version` (requires 18+)
+5. **Check Node version:** `node --version` (requires 20+)
 
 ### Common Issues
 
@@ -366,12 +395,15 @@ npm install
 npm run dev
 ```
 
-**Database connection failed:**
+**Database connection failed (Docker stack):**
 ```bash
-cd backend
-docker-compose down
-docker-compose up -d
+# from the repo root
+docker compose down
+docker compose up -d
 ```
+
+**`APP_JWT_SECRET must be set` when running `docker compose up`:**
+copy `.env.example` to `.env` and set `APP_JWT_SECRET` (e.g. `openssl rand -base64 48`).
 
 ---
 

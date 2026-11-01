@@ -104,6 +104,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-expensedb}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-expense}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-expensepass}
+      # JWT signing key — REQUIRED. Compose refuses to start the stack
+      # if it is unset, so tokens are never signed with the public dev
+      # key. Generate one with:  openssl rand -base64 48
+      APP_JWT_SECRET: ${APP_JWT_SECRET:?APP_JWT_SECRET must be set in .env (generate with openssl rand -base64 48)}
       # Server port inside the container — mapped to host via the
       # ports: section below
       SERVER_PORT: "8080"

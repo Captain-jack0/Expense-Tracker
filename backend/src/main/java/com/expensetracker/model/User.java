@@ -47,6 +47,13 @@ public class User {
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified;
 
+    /**
+     * Embedded in refresh tokens. Incremented on logout so every refresh
+     * token issued before that point is rejected.
+     */
+    @Column(name = "token_version", nullable = false)
+    private int tokenVersion;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

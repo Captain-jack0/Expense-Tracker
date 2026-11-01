@@ -19,7 +19,7 @@ model, error format, versioning, and per-endpoint request/response shapes.
 - **Auth:** stateless JWT (Bearer access token + refresh token) — see [Authentication](#3-authentication)
 - **Dates:** ISO-8601 strings — `2026-07-15T12:00:00Z` for timestamps, `2026-07-15` for calendar dates
 - **Money:** decimal `amount` + 3-letter `currency` code (default `USD`)
-- **IDs:** UUID strings (except the legacy `/api/expenses` resource, which uses numeric ids)
+- **IDs:** UUID strings
 - **CORS:** the Vite dev origins (`http://localhost:5173`, `http://127.0.0.1:5173`) are allowed by default; override with `APP_CORS_ALLOWED_ORIGINS`.
 
 ---
@@ -48,42 +48,56 @@ payload in this envelope:
 | `error`   | string \| null  | Human-readable error message on failure           |
 | `message` | string \| null  | Optional info message (e.g. "Transaction deleted")|
 
-### Legacy exception — `/api/expenses`
+The one exception is `GET /api/transactions/paginated`, which returns the
+paginated shape `{ success, data: [...], pagination: { total, page, limit, totalPages } }`.
 
-> ⚠️ The original `/api/expenses` controller predates this convention: it returns
-> the entity/array **directly** (no envelope) and is **not** user-scoped or
-> auth-protected. It is kept for backward compatibility; new work uses
-> `/api/transactions`. Treat `/api/expenses` as deprecated.
+> The original unauthenticated `/api/expenses` endpoint has been **removed**: it
+> was not user-scoped, so anyone could read or delete every row. Use
+> `/api/transactions`. (An existing `expenses` table in an old database is left
+> untouched; nothing reads it any more.)
 
 ---
 
 ## 3. Authentication
 
-JWT-based, stateless. Two tokens are issued:
+JWT-based (HS256). Two tokens are issued:
 
-| Token           | Lifetime | Sent as                              | Used for                    |
-|-----------------|----------|--------------------------------------|-----------------------------|
-| `accessToken`   | 1 hour   | `Authorization: Bearer <accessToken>`| Every authenticated request |
-| `refreshToken`  | 7 days   | request body to `/api/auth/refresh`  | Getting a fresh access token|
+| Token           | Lifetime   | Sent as                              | Used for                    |
+|-----------------|------------|--------------------------------------|-----------------------------|
+| `accessToken`   | 15 minutes | `Authorization: Bearer <accessToken>`| Every authenticated request |
+| `refreshToken`  | 7 days     | request body to `/api/auth/refresh`  | Getting a fresh access token|
 
 **Flow**
 
 1. `POST /api/auth/register` or `POST /api/auth/login` → returns `{ user, accessToken, refreshToken }`.
+   Registration also seeds the user's default categories.
 2. Send `Authorization: Bearer <accessToken>` on protected calls.
 3. On `401` (expired token), call `POST /api/auth/refresh` with the refresh token for a new pair.
-4. `POST /api/auth/logout` is a client-side discard (tokens are stateless); returns 200 for a stable contract.
+4. `POST /api/auth/logout` (requires the access token) **revokes every refresh
+   token** issued to the user so far: refresh tokens carry the user's
+   `token_version`, and logout increments it. The access token itself stays
+   valid until it expires (≤ 15 min).
+
+**Brute-force protection:** `/login` (per client IP + email, failed attempts
+only) and `/register` (per client IP) allow 10 attempts per 5 minutes, then
+return **429**. Configure with `app.auth.rate-limit.*`. The limiter is
+in-memory, so it is per backend instance.
+
+**Signing key:** set `APP_JWT_SECRET` (≥ 32 bytes, e.g. `openssl rand -base64 48`).
+Local `mvn spring-boot:run` falls back to a public dev key and logs a warning;
+the `docker` profile has **no fallback** and refuses to start without it.
 
 **Which endpoints require auth**
 
-- ✅ **Protected & user-scoped:** `/api/auth/me`, and every `/api/categories`,
-  `/api/subcategories`, `/api/transactions` call. The user id is taken from the
-  Bearer token (`@CurrentUser`); a missing/invalid token returns **401**, and a
-  user only ever sees or edits **their own** rows.
-- ❌ **Unprotected (legacy):** `/api/expenses/*` — no token required.
+- ✅ **Protected & user-scoped:** `/api/auth/me`, `/api/auth/logout`, and every
+  `/api/categories`, `/api/subcategories`, `/api/transactions` call. The user id
+  is taken from the Bearer token (`@CurrentUser`); a missing/invalid token
+  returns **401**, and a user only ever sees or edits **their own** rows.
 
-Passwords are hashed with **BCrypt**; the hash is never returned. There is no
-Spring Security filter chain yet — the `@CurrentUser` argument resolver validates
-the Bearer token per request.
+Passwords are hashed with **BCrypt**; the hash is never returned. A login for an
+unknown email still performs a BCrypt comparison, so response time does not
+reveal which emails are registered. There is no Spring Security filter chain
+yet — the `@CurrentUser` argument resolver validates the Bearer token per request.
 
 ---
 
@@ -97,11 +111,14 @@ All errors are rendered by `GlobalExceptionHandler` as the failure envelope:
 
 | Status | When                                                            |
 |--------|-----------------------------------------------------------------|
-| `400`  | Bean-validation failure (returns the first field message), malformed JSON, or a broken business rule (e.g. missing/foreign sub-category) |
-| `401`  | Bad credentials, or missing/invalid/expired token                |
+| `400`  | Bean-validation failure (returns the first field message), malformed JSON, a malformed path/query value (e.g. a non-UUID id, unknown enum), a missing required parameter, or a broken business rule (e.g. missing/foreign sub-category, type/category-kind mismatch) |
+| `401`  | Bad credentials, or missing/invalid/expired/revoked token        |
 | `403`  | Forbidden (`ApiException.forbidden`)                            |
-| `404`  | Resource not found (or not owned by the caller)                 |
-| `409`  | Conflict — e.g. email already registered                       |
+| `404`  | Resource not found (or not owned by the caller), or unknown path |
+| `405`  | HTTP method not supported by the endpoint                       |
+| `409`  | Conflict — e.g. email already registered, or a unique-constraint violation |
+| `415`  | Request body is not `application/json`                          |
+| `429`  | Too many login/register attempts — wait and retry               |
 | `500`  | Unhandled server error (generic message; details logged server-side, never leaked) |
 
 ---
@@ -156,6 +173,8 @@ All entities are per-user. Timestamps (`createdAt`, `updatedAt`) are ISO-8601.
 ### Core entry rules (enforced server-side)
 
 - The `categoryId` must belong to the caller.
+- The transaction `type` must match the category's `kind` (no `EXPENSE` under an
+  `INCOME` category and vice versa) — otherwise `400`.
 - A `subCategoryId` is **required** when the chosen category has any
   sub-categories, is **rejected** when the category has none, and must belong to
   the selected category — otherwise `400`.
@@ -173,7 +192,7 @@ All entities are per-user. Timestamps (`createdAt`, `updatedAt`) are ISO-8601.
 | POST   | `/login`    | —    | `LoginRequest`                | `AuthResponse` (200)   |
 | GET    | `/me`       | ✅   | —                             | `UserDto` (200)        |
 | POST   | `/refresh`  | —    | `{ "refreshToken": "..." }`   | `AuthResponse` (200)   |
-| POST   | `/logout`   | —    | —                             | `null` + message (200) |
+| POST   | `/logout`   | ✅   | —                             | `null` + message (200); revokes refresh tokens |
 
 ### Categories — `/api/categories`  *(enveloped, auth ✅)*
 
@@ -201,7 +220,9 @@ All entities are per-user. Timestamps (`createdAt`, `updatedAt`) are ISO-8601.
 
 | Method | Path      | Query / Body                              | Returns               |
 |--------|-----------|-------------------------------------------|-----------------------|
-| GET    | `/`       | filters: `categoryId`, `subCategoryId`, `type`, `from`, `to` (all optional) | `TransactionDto[]` (newest first) |
+| GET    | `/`       | filters: `categoryId`, `subCategoryId`, `type`, `from`, `to` (all optional) | `TransactionDto[]` (newest first, all matches) |
+| GET    | `/paginated` | `page` (1-based, default 1), `limit` (default 20, max 100) + the same filters | paginated shape (see §2) |
+| GET    | `/{id}`   | —                                         | `TransactionDto`      |
 | POST   | `/`       | `TransactionRequest`                      | `TransactionDto` (201)|
 | PUT    | `/{id}`   | `TransactionRequest`                      | `TransactionDto`      |
 | DELETE | `/{id}`   | —                                         | `null` + message      |
@@ -210,12 +231,6 @@ All entities are per-user. Timestamps (`createdAt`, `updatedAt`) are ISO-8601.
 
 Results are sorted by `transactionDate` then `createdAt`, descending. `from`/`to`
 are inclusive ISO dates.
-
-### Expenses — `/api/expenses`  *(legacy, raw payloads, no auth)*
-
-Deprecated first-generation endpoint kept for backward compatibility. CRUD plus
-`/category/{category}`, `/date-range?startDate&endDate`, `/categories`. Prefer
-`/api/transactions` for new work.
 
 ---
 

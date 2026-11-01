@@ -9,6 +9,7 @@ import com.expensetracker.model.CategoryKind;
 import com.expensetracker.repository.CategoryRepository;
 import com.expensetracker.repository.SubCategoryRepository;
 import com.expensetracker.repository.TransactionRepository;
+import com.expensetracker.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,7 @@ class CategoryServiceTest {
     @Mock private SubCategoryRepository subCategoryRepository;
     @Mock private TransactionRepository transactionRepository;
     @Mock private CategorySeeder categorySeeder;
+    @Mock private UserRepository userRepository;
 
     private CategoryService service;
 
@@ -43,7 +45,7 @@ class CategoryServiceTest {
     @BeforeEach
     void setUp() {
         service = new CategoryService(categoryRepository, subCategoryRepository,
-                transactionRepository, categorySeeder);
+                transactionRepository, categorySeeder, userRepository);
     }
 
     private Category category(String name, boolean system) {
@@ -70,9 +72,24 @@ class CategoryServiceTest {
 
         List<CategoryDto> result = service.list(userId);
 
+        verify(userRepository).findByIdForUpdate(userId);
         verify(categorySeeder).seedFor(userId);
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo("Needs");
+    }
+
+    @Test
+    @DisplayName("list does not seed again if a concurrent request seeded while we waited for the lock")
+    void list_concurrentSeed_seedsOnce() {
+        // First count (before the lock) sees 0; the re-check after acquiring
+        // the user row lock sees the other request's seeded categories.
+        when(categoryRepository.countByUserId(userId)).thenReturn(0L, 5L);
+        when(categoryRepository.findByUserIdOrderBySortOrderAscNameAsc(userId)).thenReturn(List.of());
+
+        service.list(userId);
+
+        verify(userRepository).findByIdForUpdate(userId);
+        verify(categorySeeder, never()).seedFor(any());
     }
 
     @Test

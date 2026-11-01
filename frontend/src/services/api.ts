@@ -6,26 +6,16 @@ import type {
   LoginRequest,
   RegisterRequest,
   User,
-  Account,
-  CreateAccountRequest,
-  UpdateAccountRequest,
   Transaction,
   CreateTransactionRequest,
   UpdateTransactionRequest,
   TransactionFilters,
-  Goal,
-  CreateGoalRequest,
-  UpdateGoalRequest,
   Category,
   CreateCategoryRequest,
   UpdateCategoryRequest,
   SubCategory,
   CreateSubCategoryRequest,
   UpdateSubCategoryRequest,
-  Investment,
-  CreateInvestmentRequest,
-  UpdateInvestmentRequest,
-  DashboardData,
   PaginatedResponse,
 } from '../types';
 
@@ -33,7 +23,7 @@ import type {
 // Axios Instance Configuration
 // ============================================
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -42,6 +32,50 @@ const apiClient: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// ============================================
+// Errors
+// ============================================
+
+/**
+ * Error thrown by every API call. `message` is the backend's own
+ * `{ success: false, error }` text when there is one (e.g. "Invalid email
+ * or password"), so pages can show it directly via `err.message`.
+ */
+export class ApiError extends Error {
+  readonly status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
+/** Converts an axios (or any) error into an {@link ApiError} carrying the backend message. */
+export function toApiError(error: unknown): Error {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as Partial<ApiResponse<unknown>> | undefined;
+    if (data?.error || data?.message) {
+      return new ApiError((data.error || data.message) as string, error.response?.status);
+    }
+    if (error.response) {
+      return new ApiError(`Request failed (HTTP ${error.response.status})`, error.response.status);
+    }
+    return new ApiError('Network error: could not reach the server. Please try again.');
+  }
+  return error instanceof Error ? error : new ApiError('Unexpected error');
+}
+
+// ============================================
+// Session storage helpers
+// ============================================
+
+const clearSession = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+};
 
 // ============================================
 // Request Interceptor (Add Auth Token)
@@ -64,46 +98,77 @@ apiClient.interceptors.request.use(
 // Response Interceptor (Handle Errors & Token Refresh)
 // ============================================
 
+/**
+ * Endpoints whose 401 means "bad credentials / bad refresh token", NOT
+ * "access token expired". They must never trigger a refresh + redirect,
+ * otherwise a wrong password reloads the login page and the error is lost.
+ */
+const NO_REFRESH_ENDPOINTS = ['/auth/login', '/auth/register', '/auth/refresh'];
+
+const isNoRefreshEndpoint = (url?: string) =>
+  !!url && NO_REFRESH_ENDPOINTS.some((path) => url.endsWith(path));
+
+/**
+ * In-flight refresh, shared so that several requests failing with 401 at
+ * the same time trigger a single /auth/refresh call instead of racing.
+ */
+let refreshPromise: Promise<string> | null = null;
+
+const refreshAccessToken = (): Promise<string> => {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        throw new ApiError('Your session has expired. Please log in again.', 401);
+      }
+      // Plain axios (not apiClient) so this call bypasses these interceptors.
+      const { data } = await axios.post<ApiResponse<AuthResponse>>(
+        `${API_BASE_URL}/auth/refresh`,
+        { refreshToken }
+      );
+      if (!data.success || !data.data) {
+        throw new ApiError(data.error || 'Your session has expired. Please log in again.', 401);
+      }
+      localStorage.setItem('accessToken', data.data.accessToken);
+      localStorage.setItem('refreshToken', data.data.refreshToken);
+      return data.data.accessToken;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+};
+
+type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as RetriableConfig | undefined;
 
-    // Handle 401 Unauthorized - Token expired
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Expired access token: refresh once, then replay the original request.
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !isNoRefreshEndpoint(originalRequest.url)
+    ) {
       originalRequest._retry = true;
-
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
-
-        // Attempt to refresh the token
-        const { data } = await axios.post<ApiResponse<AuthResponse>>(
-          `${API_BASE_URL}/auth/refresh`,
-          { refreshToken }
-        );
-
-        if (data.success && data.data) {
-          localStorage.setItem('accessToken', data.data.accessToken);
-          localStorage.setItem('refreshToken', data.data.refreshToken);
-
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${data.data.accessToken}`;
-          return apiClient(originalRequest);
-        }
+        const accessToken = await refreshAccessToken();
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return apiClient(originalRequest);
       } catch (refreshError) {
-        // Refresh failed - logout user
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
+        // Refresh failed - end the session and send the user to log in.
+        clearSession();
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(toApiError(refreshError));
       }
     }
 
-    return Promise.reject(error);
+    return Promise.reject(toApiError(error));
   }
 );
 
@@ -134,13 +199,12 @@ export const authApi = {
     return data.data;
   },
 
+  /** Revokes the refresh token server-side, then clears the local session. */
   logout: async (): Promise<void> => {
     try {
       await apiClient.post('/auth/logout');
     } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
+      clearSession();
     }
   },
 
@@ -150,68 +214,6 @@ export const authApi = {
       throw new Error(data.error || 'Failed to fetch user');
     }
     return data.data;
-  },
-
-  refreshToken: async (refreshToken: string): Promise<AuthResponse> => {
-    const { data } = await apiClient.post<ApiResponse<AuthResponse>>(
-      '/auth/refresh',
-      { refreshToken }
-    );
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Token refresh failed');
-    }
-    return data.data;
-  },
-};
-
-// ============================================
-// Accounts API
-// ============================================
-
-export const accountsApi = {
-  getAll: async (): Promise<Account[]> => {
-    const { data } = await apiClient.get<ApiResponse<Account[]>>('/accounts');
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to fetch accounts');
-    }
-    return data.data;
-  },
-
-  getById: async (id: string): Promise<Account> => {
-    const { data } = await apiClient.get<ApiResponse<Account>>(`/accounts/${id}`);
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to fetch account');
-    }
-    return data.data;
-  },
-
-  create: async (accountData: CreateAccountRequest): Promise<Account> => {
-    const { data } = await apiClient.post<ApiResponse<Account>>(
-      '/accounts',
-      accountData
-    );
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to create account');
-    }
-    return data.data;
-  },
-
-  update: async (id: string, accountData: UpdateAccountRequest): Promise<Account> => {
-    const { data } = await apiClient.put<ApiResponse<Account>>(
-      `/accounts/${id}`,
-      accountData
-    );
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to update account');
-    }
-    return data.data;
-  },
-
-  delete: async (id: string): Promise<void> => {
-    const { data } = await apiClient.delete<ApiResponse<void>>(`/accounts/${id}`);
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to delete account');
-    }
   },
 };
 
@@ -230,6 +232,7 @@ export const transactionsApi = {
     return data.data;
   },
 
+  /** `page` is 1-based; the backend clamps `limit` to 1..100. */
   getPaginated: async (
     page: number = 1,
     limit: number = 20,
@@ -291,62 +294,6 @@ export const transactionsApi = {
 };
 
 // ============================================
-// Goals API
-// ============================================
-
-export const goalsApi = {
-  getAll: async (): Promise<Goal[]> => {
-    const { data } = await apiClient.get<ApiResponse<Goal[]>>('/goals');
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to fetch goals');
-    }
-    return data.data;
-  },
-
-  getById: async (id: string): Promise<Goal> => {
-    const { data } = await apiClient.get<ApiResponse<Goal>>(`/goals/${id}`);
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to fetch goal');
-    }
-    return data.data;
-  },
-
-  create: async (goalData: CreateGoalRequest): Promise<Goal> => {
-    const { data } = await apiClient.post<ApiResponse<Goal>>('/goals', goalData);
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to create goal');
-    }
-    return data.data;
-  },
-
-  update: async (id: string, goalData: UpdateGoalRequest): Promise<Goal> => {
-    const { data } = await apiClient.put<ApiResponse<Goal>>(`/goals/${id}`, goalData);
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to update goal');
-    }
-    return data.data;
-  },
-
-  delete: async (id: string): Promise<void> => {
-    const { data } = await apiClient.delete<ApiResponse<void>>(`/goals/${id}`);
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to delete goal');
-    }
-  },
-
-  addContribution: async (id: string, amount: number): Promise<Goal> => {
-    const { data } = await apiClient.post<ApiResponse<Goal>>(
-      `/goals/${id}/contribute`,
-      { amount }
-    );
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to add contribution');
-    }
-    return data.data;
-  },
-};
-
-// ============================================
 // Categories API
 // ============================================
 
@@ -355,14 +302,6 @@ export const categoriesApi = {
     const { data } = await apiClient.get<ApiResponse<Category[]>>('/categories');
     if (!data.success || !data.data) {
       throw new Error(data.error || 'Failed to fetch categories');
-    }
-    return data.data;
-  },
-
-  getById: async (id: string): Promise<Category> => {
-    const { data } = await apiClient.get<ApiResponse<Category>>(`/categories/${id}`);
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to fetch category');
     }
     return data.data;
   },
@@ -442,75 +381,9 @@ export const subCategoriesApi = {
   },
 };
 
-// ============================================
-// Investments API
-// ============================================
-
-export const investmentsApi = {
-  getAll: async (): Promise<Investment[]> => {
-    const { data } = await apiClient.get<ApiResponse<Investment[]>>('/investments');
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to fetch investments');
-    }
-    return data.data;
-  },
-
-  getById: async (id: string): Promise<Investment> => {
-    const { data } = await apiClient.get<ApiResponse<Investment>>(
-      `/investments/${id}`
-    );
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to fetch investment');
-    }
-    return data.data;
-  },
-
-  create: async (investmentData: CreateInvestmentRequest): Promise<Investment> => {
-    const { data } = await apiClient.post<ApiResponse<Investment>>(
-      '/investments',
-      investmentData
-    );
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to create investment');
-    }
-    return data.data;
-  },
-
-  update: async (
-    id: string,
-    investmentData: UpdateInvestmentRequest
-  ): Promise<Investment> => {
-    const { data } = await apiClient.put<ApiResponse<Investment>>(
-      `/investments/${id}`,
-      investmentData
-    );
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to update investment');
-    }
-    return data.data;
-  },
-
-  delete: async (id: string): Promise<void> => {
-    const { data } = await apiClient.delete<ApiResponse<void>>(`/investments/${id}`);
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to delete investment');
-    }
-  },
-};
-
-// ============================================
-// Dashboard API
-// ============================================
-
-export const dashboardApi = {
-  getData: async (): Promise<DashboardData> => {
-    const { data } = await apiClient.get<ApiResponse<DashboardData>>('/dashboard');
-    if (!data.success || !data.data) {
-      throw new Error(data.error || 'Failed to fetch dashboard data');
-    }
-    return data.data;
-  },
-};
+// Accounts, goals, investments and dashboard endpoints are intentionally not
+// wired up yet: the backend does not implement them (Phase 2/3). Their
+// request/response types remain in ../types for when they land.
 
 // Export the configured axios instance for custom requests
 export default apiClient;

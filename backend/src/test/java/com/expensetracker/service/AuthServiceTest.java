@@ -25,6 +25,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -37,14 +38,16 @@ class AuthServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtService jwtService;
+    @Mock private CategorySeeder categorySeeder;
 
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userRepository, passwordEncoder, jwtService);
+        lenient().when(passwordEncoder.encode(anyString())).thenReturn("dummy-hash");
+        authService = new AuthService(userRepository, passwordEncoder, jwtService, categorySeeder);
         lenient().when(jwtService.generateAccessToken(any())).thenReturn("access-token");
-        lenient().when(jwtService.generateRefreshToken(any())).thenReturn("refresh-token");
+        lenient().when(jwtService.generateRefreshToken(any(), anyInt())).thenReturn("refresh-token");
     }
 
     private static User persistedUser(String email) {
@@ -95,6 +98,7 @@ class AuthServiceTest {
         assertThat(response.getAccessToken()).isEqualTo("access-token");
         assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
         assertThat(response.getUser().getEmail()).isEqualTo("ada@example.com");
+        verify(categorySeeder).seedFor(captor.getValue().getId());
     }
 
     @Test
@@ -135,8 +139,12 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.login(req))
                 .isInstanceOf(AuthException.class)
+                .hasMessage("Invalid email or password")
                 .extracting(e -> ((AuthException) e).getStatus())
                 .isEqualTo(HttpStatus.UNAUTHORIZED);
+        // A BCrypt comparison still runs (against a dummy hash) so the
+        // response time doesn't reveal whether the email exists.
+        verify(passwordEncoder).matches("x", "dummy-hash");
     }
 
     @Test
@@ -169,7 +177,8 @@ class AuthServiceTest {
     @DisplayName("refresh issues a fresh token pair for a valid refresh token")
     void refresh_success() {
         User user = persistedUser("ada@example.com");
-        when(jwtService.parseRefreshToken("refresh-token")).thenReturn(user.getId());
+        when(jwtService.parseRefreshToken("refresh-token"))
+                .thenReturn(new JwtService.RefreshClaims(user.getId(), 0));
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
 
         AuthResponse response = authService.refresh("refresh-token");
@@ -180,9 +189,34 @@ class AuthServiceTest {
     @DisplayName("refresh fails when the token's user no longer exists")
     void refresh_userGone_unauthorized() {
         UUID id = UUID.randomUUID();
-        when(jwtService.parseRefreshToken("refresh-token")).thenReturn(id);
+        when(jwtService.parseRefreshToken("refresh-token")).thenReturn(new JwtService.RefreshClaims(id, 0));
         when(userRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> authService.refresh("refresh-token")).isInstanceOf(AuthException.class);
+    }
+
+    @Test
+    @DisplayName("refresh rejects a token issued before the last logout (stale token version)")
+    void refresh_revokedToken_unauthorized() {
+        User user = persistedUser("ada@example.com");
+        user.setTokenVersion(2);
+        when(jwtService.parseRefreshToken("old-token")).thenReturn(new JwtService.RefreshClaims(user.getId(), 1));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> authService.refresh("old-token"))
+                .isInstanceOf(AuthException.class)
+                .hasMessageContaining("revoked");
+    }
+
+    @Test
+    @DisplayName("logout bumps the user's token version, revoking existing refresh tokens")
+    void logout_incrementsTokenVersion() {
+        User user = persistedUser("ada@example.com");
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+
+        authService.logout(user.getId());
+
+        assertThat(user.getTokenVersion()).isEqualTo(1);
+        verify(userRepository).save(user);
     }
 }
